@@ -3,17 +3,44 @@ const fs = require('fs');
 const touch = require("touch");
 const path = require('path');
 
-var mdContentDirectory = "C:\\work\\vsc\\myExpressApp\\test";
+var mdContentDirectory = __dirname + "/test";
 
-function getTitleFromFileName(fn) {
+function getTitleFromRelPath(fn) {
+    if (fn === '') {
+        return "Home";
+    };
     return decodeURIComponent(path.parse(fn).name);
+}
+
+function splitPath(relPath) {
+    return relPath.split('/');
+}
+
+function getLineage(relPath) {
+    var f = '';
+    return splitPath(relPath).map((i) => {
+        var r = f + i;
+        f = r + '/';
+        return r;
+    });
+}
+
+function getMdLink(relPath) {
+    return "[" + getTitleFromRelPath(relPath) + "](/content" + relPath + ')';
+}
+
+function getBreadcrumbs(relPath) {
+    var parts = getLineage(relPath);
+    return parts.reduce((s,i) => {
+        return s + '' + getMdLink(i) + ' > ';
+    }, '') + "\r\n";
 }
 
 function getDirectoryAsMarkdown(relPath, callback) {
     var fsPath = mdContentDirectory + relPath;
     fs.readdir(fsPath, (err, files) => {
-        data = files.reduce((s, i) => {
-            return s + "* [" + getTitleFromFileName(i) + "](/content" + (relPath + "/" + i) + ")\r\n";
+        data = getBreadcrumbs(relPath) + files.reduce((s, i) => {
+            return s + "* " + getMdLink(relPath + "/" + i) + "\r\n";
         }, "");
         callback(data);
       });
@@ -41,7 +68,7 @@ function get(relPath, callback) {
             callback(null);
         }
         else {
-            callback(data); 
+            callback(getBreadcrumbs(relPath) + "\r\n\r\n" + data); 
         }
     });
 };
