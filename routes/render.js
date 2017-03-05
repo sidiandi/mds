@@ -1,35 +1,23 @@
-const marked = require('marked');
-const mdContent = require('../mdContent');
 var express = require('express');
 var router = express.Router();
+const url = require('url')
 
-var wikiLinks = /\[\[([^\[]+)\]\]/g;
-
-function wikiLinkToMdLink(wikiLink) {
-  var wikiLinks = /\[\[([^\[]+)\]\]/g;
-  var m = wikiLinks.exec(wikiLink);
-  var text = m[1];
-  return "[" + text + "](" + (text + ".md") + ")";
-}
-
-marked.InlineLexer.prototype.origOutput = marked.InlineLexer.prototype.output;
-marked.InlineLexer.prototype.output = function(src) {
-  src = src.replace(wikiLinks, wikiLinkToMdLink);
-  return this.origOutput(src);
-}
-
-/* GET users listing. */
-router.get('/*', function(req, res, next) {
-  mdContent.get(req.path, (data) => {
-    var markedOptions = { 
-      gfm: true,
-      breaks: true,
-      tables: true
-    };
-    res.type("html");
-    res.send(marked(data, markedOptions));
+module.exports = function(content, renderer) {
+  return router
+  .get('/*', function(req, res, next) {
+    let relPath = req.path;
+    content.get(relPath, (markDownSource) => {
+      res.type("html");
+      res.send(renderer.render(markDownSource, relPath));
+    });
+  })
+  .post('/*', function(req, res, next) {
+    let relPath = req.path;
+    if (req.body.commit) {
+      content.set(relPath,  req.body.content, () => { });
+    }
+      res.type("html");
+      res.send(renderer.render(req.body.content, relPath));
   });
-});
-
-module.exports = router;
+};
 

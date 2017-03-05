@@ -1,17 +1,20 @@
-# hagen
+# MDS - MarkDownServer
 
-hagen is a [[launch application]] and an [[activity tracker]].
+MarkDownServer is a minimal Markdown based Wiki.
 
-## Usage
+## Internal Links
 
-* Hit Ctrl+Alt+Space, then type what you want. 
-* Drag files or URLs into the open application to addd them to the search index
-* Extend hagen with plugins. Examples: auto-dial if the entered text is a phone number
+Internal links are written as
+~~~~
+[[Link to another page]]
+~~~~
+[[Link to another page]]
 
-## Todo
-* nuget update
-* Remove GitVersionTaskVersion, NUnitVersion from [Build.props](Build.props).
-* Implement [[Wiki Links to Another Page]].
-* Implement [[Bread Crumbs]].
+See the [[Installation Instructions]]
 
-## Done
+[[How to transfer SW to the production]]
+[[How to validate SY charms]]
+
+## Meetings
+
+[[2017-03-04 09:00 WIP Installer]]

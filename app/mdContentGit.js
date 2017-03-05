@@ -1,3 +1,6 @@
+const execFile = require('child_process').execFile;
+const git = require('git');
+const marked = require('marked');
 const url = require('url');
 const mkdirp = require('mkdirp');
 const fs = require('fs');
@@ -10,16 +13,33 @@ function splitPath(relPath) {
     return relPath.split('/');
 }
 
-function createEmptyFile(fsPath, cb) {
-    mkdirp(path.dirname(fsPath), (err) => {
-        touch(fsPath, (err) => { cb() });
+// Constructor
+function MdContent(contentDirectory, callback) {
+    this.contentDirectory = contentDirectory;
+    mkdirp(this.contentDirectory, (err) => {
+        this.git(['init'], (err) => {
+            callback(err);
+        });
     });
 }
 
-// Constructor
-function MdContent(contentDirectory) {
-  // always initialize all instance properties
-  this.contentDirectory = contentDirectory;
+MdContent.prototype.git = function(args, cb) {
+    console.log("git " + args.join(" "));
+    execFile('git', args, { cwd: this.contentDirectory }, (error, stdout, stderr) => {
+        console.log(error);
+        console.log(stdout);
+        console.log(stderr);
+        cb(error);
+    });
+}
+
+MdContent.prototype.createEmptyFileInGit = function(relPath, cb) {
+    let fsPath = this.getFsPath(relPath);
+    mkdirp(path.dirname(fsPath), (err) => {
+        touch(fsPath, (err) => {
+            this.git(['add', '.' + relPath], (err) => { cb() });
+        });
+    });
 }
 
 MdContent.prototype.getFsPath = function(relPath) {
@@ -46,7 +66,7 @@ MdContent.prototype.get = function(relPath, callback) {
                 this.getDirectoryAsMarkdown(relPath, callback);
                 return;
             } else if (err.code == 'ENOENT') {
-                createEmptyFile(fsPath, () => { this.get(relPath, callback); });
+                callback('# ' + this.getTitleFromRelPath(relPath) + '\r\n\r\nThis page is currently empty.');
                 return;
             }
             console.log(err);
@@ -60,20 +80,14 @@ MdContent.prototype.get = function(relPath, callback) {
 
 MdContent.prototype.set = function(relPath, data, callback) {
     var fsPath = this.getFsPath(relPath);
-    console.log(fsPath);
-    fs.writeFile(fsPath, data, (err) => { 
-        if (err) {
-            if (err.code == 'EISDIR') {
-                callback();
-            } else if (err.code == 'ENOENT') {
-                createEmptyFile(fsPath, () => { this.set(relPath, data, callback); });
-                return;
-            }
-            console.log(err);
-            callback();
-        }
-        else {
-            callback(); 
+    fs.exists(fsPath, (fileExists) => {
+        if (fileExists) {
+            fs.writeFile(fsPath, data, (err) => {
+                this.git(['commit', '-m', 'wiki', '.' + relPath], (err) => { callback(); });
+            });
+        } else {
+            console.log('empty');
+            this.createEmptyFileInGit(relPath, () => { this.set(relPath, data, callback); });
         }
     });
 };
@@ -102,6 +116,36 @@ MdContent.prototype.getLinkFromRelPath = function (fn) {
     return '' + fn;
 }
 
+function canonic(x) {
+    let y = [];
+    x.forEach((i) => {
+        if (i === '.') {
+
+        } else if (i == '..') {
+            y.pop();
+        } else {
+            y.push(i);
+        }
+    })
+    return y;
+}
+
+MdContent.prototype.getHashedHref = function (href, contentPath) {
+    let u = url.parse(href);
+    if (u.host) {
+        return href;
+    }
+    if (href.startsWith('/')) {
+        return '/#' + href;
+    }
+    
+    let p = contentPath.split('/');
+    p.pop();
+    p = p.concat(u.path.split('/'));
+    p = canonic(p);
+    return '/#' + p.join('/');
+}
+
 MdContent.prototype.getLineage = function(relPath) {
     let lineage = [];
     let i = -1;
@@ -128,6 +172,9 @@ MdContent.prototype.withTrailingSlash = function(relPath) {
         relPath = relPath + '/';
     }
     return relPath;
+}
+
+MdContent.prototype.render = function(relPath, markDown) {
 }
 
 // export the class
