@@ -1,21 +1,38 @@
+var restore = undefined;
+
 $(document).ready(function(){
 
     let currentRelPath;
 
+    restore = function(commitHash) {
+        $.post('/source' + currentRelPath, { commitHash: commitHash }, (data) => {
+            $('#source').val(data);
+            updateTempContent(data);
+        });
+    }
+
     function navigateTo(relPath) {
-        $.get('/breadCrumbs' + relPath, (data) => {
+        currentRelPath = relPath;
+
+        $.get('/breadCrumbs' + currentRelPath, (data) => {
             $('#header').html(data);
         });
 
-        $.get('/render' + relPath, (data) => {
-            $('#article').html(data);
+        $.get('/render' + currentRelPath, (data) => {
+            $('article').html(data);
         });
 
-        $.get('/source' + relPath, (data) => {
+        $.get('/nav' + currentRelPath, (data) => {
+            $('navbar').html(data);
+        });
+
+        $.get('/source' + currentRelPath, (data) => {
             $('#source').val(data);
         });
 
-        currentRelPath = relPath;
+        $.get('/history' + currentRelPath, (data) => {
+            $('history').html(data);
+        });
     }
 
     window.onhashchange = function() {
@@ -25,6 +42,10 @@ $(document).ready(function(){
     function setContent(content) {
         $.post('/render' + currentRelPath, { content: content, commit: true }, (data) => {
             $('#article').html(data);
+
+            $.get('/history' + currentRelPath, (data) => {
+                $('history').html(data);
+            });
         });
     }
 

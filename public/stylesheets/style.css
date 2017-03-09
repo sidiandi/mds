@@ -21,27 +21,35 @@ body main {
   min-width: 0px;
 }
 
-body main article { 
-  overflow-y: auto;
-  flex: 1;
-  padding: 4px;
+navbar { 
+overflow: auto;
+flex: 1 0 200px;
+padding: 4px;
+width: 200px;
+max-width: 200px;
 }
 
-body main edit { 
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+article { 
+overflow-y: auto;
+flex: 1;
+padding: 4px;
 }
 
-body main edit menu {
+edit { 
+flex: 1;
+display: flex;
+flex-direction: column;
+}
+
+menu {
   flex: none;
 }
 
-body main edit editField {
+edit editField {
   flex: 1 1 auto;
 }
 
-body main edit editField textarea{ 
+edit editField textarea{ 
   width: 100%;
   height: 100%;
 box-sizing: border-box;         /* For IE and modern versions of Chrome */
@@ -50,14 +58,25 @@ box-sizing: border-box;         /* For IE and modern versions of Chrome */
  resize: none;
 }
 
+edit history {
+  flex: 0 1 200px;
+  height: 200px;
+  min-height: 0px;
+  min-width: 0px;
+  overflow-y: auto;
+}
+
 body header {
-  background-color: gray;
+  background-color: #fafbfc;
+  border-bottom: 1px solid #e1e4e8;
   flex: none;
   padding: 4px;
+
 }
 
 body footer { 
-  background-color: gray;
+  background-color: #fafbfc;
+  border-top: 1px solid #e1e4e8;
   flex: none;
   padding: 4px;
 }

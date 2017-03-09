@@ -1,21 +1,25 @@
 {
-  "name": "myexpressapp",
+  "name": "mds",
   "version": "0.0.0",
   "private": true,
   "scripts": {
     "start": "nodemon ./bin/www",
-    "test": "nodemon node_modules/jasmine\bin/jasmine.js"
+    "test": "nodemon ./node_modules/jasmine/bin/jasmine.js"
   },
   "dependencies": {
     "body-parser": "~1.16.0",
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.0",
+    "es6-promisify": "^5.0.0",
+    "es6-promisify-all": "^0.1.0",
     "express": "~4.14.1",
     "git": "^0.1.5",
     "jade": "~1.11.0",
     "jasmine": "^2.5.3",
     "marked": "^0.3.6",
+    "md5": "^2.2.1",
     "morgan": "~1.7.0",
+    "rmdir": "^1.2.0",
     "serve-favicon": "~2.3.2",
     "touch": "^1.0.0"
   }

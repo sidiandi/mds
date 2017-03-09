@@ -7,16 +7,15 @@ describe("mdContentGit stores Markdown Content in a git repository", function() 
     let mdContent;
 
     beforeAll(function(done){
-        mdContent = new MdContent(os.tmpdir() + "/mds-test-content", (err) => {
-            done();
-        });
+        mdContent = new MdContent(os.tmpdir() + "/mds-test-content");
+        mdContent.init().then(done);
     });
 
     it("gets content", function(done) {
-        mdContent.get("/empty.md", function(data) {
+        mdContent.get("/empty.md").then((data) => {
             expect(data).toContain("This page is currently empty.");
-            done();
-        });
+        })
+        .then(done);
     });
 
     it("calculates a link title from a relative path", function() {
@@ -48,12 +47,14 @@ describe("mdContentGit stores Markdown Content in a git repository", function() 
 
     it("sets content", function(done) {
         let testContent = "test123";
-        mdContent.set("/test-set.md", testContent, function() {
-            mdContent.get("/test-set.md", function(data) {
+        const relPath = "/test-set.md";
+        mdContent.set(relPath, testContent)
+        .then(() => { console.log("set complete"); })
+        .then(() => { return mdContent.get(relPath); } )
+        .then(function(data) {
                 expect(data).toEqual(testContent);
-                done();
-            });
-        });
+        })
+        .then(done);
     });
 });
 

@@ -23,9 +23,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const content = new MdContent('C:\\work\\mds-test-content', (err) =>{
   const renderer = new MdRender();
-  app.use('/source', new require('./routes/raw')(content));
+  app.use('/api', new require('./routes/api')(content, renderer));
+  app.use('/source', new require('./routes/source')(content));
   app.use('/render', new require('./routes/render')(content, renderer));
+  app.use('/nav', new require('./routes/nav')(content, renderer));
   app.use('/breadCrumbs', new require('./routes/breadCrumbs')(content, renderer));
+  app.use('/history', new require('./routes/history')(content, renderer));
   //app.static('/', './public');
 
   // catch 404 and forward to error handler

@@ -1,11 +1,13 @@
+const promisify = require("es6-promisify");
+var fs = require('fs');
 const execFile = require('child_process').execFile;
 const git = require('git');
 const marked = require('marked');
 const url = require('url');
-const mkdirp = require('mkdirp');
-const fs = require('fs');
-const touch = require("touch");
+const mkdirp = promisify(require('mkdirp'));
+const touch = promisify(require("touch"));
 const path = require('path');
+const rmdir = require('rmdir');
 
 const newLine = '\r\n';
 
@@ -16,81 +18,140 @@ function splitPath(relPath) {
 // Constructor
 function MdContent(contentDirectory, callback) {
     this.contentDirectory = contentDirectory;
-    mkdirp(this.contentDirectory, (err) => {
-        this.git(['init'], (err) => {
-            callback(err);
+}
+
+MdContent.prototype.init = function() {
+    const _this = this;
+    return new Promise((resolve, reject) => {
+        rmdir(_this.contentDirectory, function(err, dirs, files) {
+            if (err) {
+                reject(err);
+            }
+            else { 
+                resolve(err);
+            }
+        });
+    })
+    .then(() => { return mkdirp(_this.contentDirectory); })
+    .then(() => { return _this.git(['init']) })
+    .then(() => { console.log(`MdContent.init successful at ${_this.contentDirectory}`); });
+}
+
+MdContent.prototype.git = function(args) {
+    const _this = this;
+    return new Promise(function(resolve, reject) {
+        execFile('git', args, { cwd: _this.contentDirectory }, (error, stdout, stderr) => {
+            console.log({
+                stderr: stderr,
+                stdout: stdout,
+                args: args,
+                error: error
+            });
+            if (error) {
+                reject(error);
+            }
+            else {
+                resolve(stdout);
+            }
         });
     });
 }
 
-MdContent.prototype.git = function(args, cb) {
-    console.log("git " + args.join(" "));
-    execFile('git', args, { cwd: this.contentDirectory }, (error, stdout, stderr) => {
-        console.log(error);
-        console.log(stdout);
-        console.log(stderr);
-        cb(error);
-    });
-}
-
-MdContent.prototype.createEmptyFileInGit = function(relPath, cb) {
+MdContent.prototype.createEmptyFileInGit = function(relPath) {
     let fsPath = this.getFsPath(relPath);
-    mkdirp(path.dirname(fsPath), (err) => {
-        touch(fsPath, (err) => {
-            this.git(['add', '.' + relPath], (err) => { cb() });
-        });
-    });
+    return mkdirp(path.dirname(fsPath))
+        .then(() => { return touch(fsPath) })
+        .then(() => { return this.git(['add', '.' + relPath]) });
 }
 
 MdContent.prototype.getFsPath = function(relPath) {
     return this.contentDirectory + relPath;
 }
 
-MdContent.prototype.getDirectoryAsMarkdown = function(relPath, callback) {
+MdContent.prototype.getDirectoryAsMarkdown = function(relPath) {
+    const _this = this;
     relPath = this.withTrailingSlash(relPath);
     var fsPath = this.getFsPath(relPath);
-    fs.readdir(fsPath, (err, files) => {
-        data = files.reduce((s, i) => {
-            return s + "* " + this.getMdLink(relPath + i) + newLine;
-        }, '');
-        callback(data);
-      });
+    return promisify(fs.readdir)(fsPath)
+        .then((files) => {
+            var data = files.reduce((s, i) => {
+                return s + "* " + _this.getMdLink(relPath + i) + newLine;
+            })
+        });
 }
 
-MdContent.prototype.get = function(relPath, callback) {
+MdContent.prototype.getNav = function(relPath, callback) {
+    let p = this.getParent(relPath);
+    if (p) {
+        this.get(p + '.sidebar.md', callback);
+    } else {
+        return '/.sidebar.md';
+    }
+}
+
+MdContent.prototype.getParent = function(relPath) {
+    var lin = this.getLineage(relPath);
+    return lin[lin.length-2];
+}
+
+MdContent.prototype.get = function(relPath) {
+    console.log("get " + relPath);
     var fsPath = this.getFsPath(relPath);
-    console.log(fsPath);
-    fs.readFile(fsPath, "utf-8", (err, data) => { 
-        if (err) {
-            if (err.code == 'EISDIR') {
-                this.getDirectoryAsMarkdown(relPath, callback);
-                return;
-            } else if (err.code == 'ENOENT') {
-                callback('# ' + this.getTitleFromRelPath(relPath) + '\r\n\r\nThis page is currently empty.');
+    const _this = this;
+    return new Promise((resolve, reject) => {
+        fs.readFile(fsPath, "utf-8", (err, data) => { 
+            if (err) {
+                if (err.code == 'EISDIR') {
+                    _this.getDirectoryAsMarkdown(relPath).then(resolve, reject);
+                    return;
+                } else if (err.code == 'ENOENT') {
+                    if (relPath && relPath.endsWith('.sidebar.md')) {
+                        _this.get(_this.getParent(relPath)).then(resolve, reject);
+                        return;
+                    } else {
+                        resolve('# ' + this.getTitleFromRelPath(relPath) + '\r\n\r\nThis page is currently empty.');
+                        return;
+                    }
                 return;
             }
-            console.log(err);
-            callback(null);
+            reject(err);
         }
         else {
-            callback(data); 
+            resolve(data); 
         }
     });
+    });
+}
+
+/*Promise */ 
+MdContent.prototype.getHistory = function(relPath) {
+    return this.git(['log', '-100', '--pretty=format:<li onClick="restore(\'%H\')">%ar: %aD</li>%n', '.' + relPath]);
 };
 
-MdContent.prototype.set = function(relPath, data, callback) {
+/*Promise */ 
+MdContent.prototype.getVersion = function(relPath, versionId) {
+    return this.git(['show', versionId + ':.' + relPath]);
+}
+
+/*Promise */ 
+MdContent.prototype.set = function(relPath, data) {
+    const _this = this;
     var fsPath = this.getFsPath(relPath);
-    fs.exists(fsPath, (fileExists) => {
-        if (fileExists) {
-            fs.writeFile(fsPath, data, (err) => {
-                this.git(['commit', '-m', 'wiki', '.' + relPath], (err) => { callback(); });
+    return new Promise((resolve, reject) => {
+        fs.exists(fsPath, (fileExists) => {
+            if (fileExists) {
+                fs.writeFile(fsPath, data, (err) => {
+                    _this.git(['commit', '-m', 'wiki', '.' + relPath])
+                    .then(resolve, reject);
             });
         } else {
-            console.log('empty');
-            this.createEmptyFileInGit(relPath, () => { this.set(relPath, data, callback); });
+            _this.createEmptyFileInGit(relPath)
+                .then(() => { return _this.set(relPath, data); })
+                .then(resolve, reject);
         }
+        });
     });
-};
+}
 
 MdContent.prototype.getTitleFromRelPath = function(fn) {
     if (fn === '/') {
@@ -174,7 +235,8 @@ MdContent.prototype.withTrailingSlash = function(relPath) {
     return relPath;
 }
 
-MdContent.prototype.render = function(relPath, markDown) {
+MdContent.prototype.api = function(req, callback) {
+    
 }
 
 // export the class
