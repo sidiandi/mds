@@ -20,9 +20,9 @@ function MdContent(contentDirectory, callback) {
     this.contentDirectory = contentDirectory;
 }
 
-MdContent.prototype.init = function() {
-    const _this = this;
-    return new Promise((resolve, reject) => {
+/*
+
+new Promise((resolve, reject) => {
         rmdir(_this.contentDirectory, function(err, dirs, files) {
             if (err) {
                 reject(err);
@@ -32,7 +32,13 @@ MdContent.prototype.init = function() {
             }
         });
     })
-    .then(() => { return mkdirp(_this.contentDirectory); })
+    .then(() => { return 
+
+*/
+
+MdContent.prototype.init = function() {
+    const _this = this;
+    return mkdirp(_this.contentDirectory)
     .then(() => { return _this.git(['init']) })
     .then(() => { console.log(`MdContent.init successful at ${_this.contentDirectory}`); });
 }
@@ -68,6 +74,7 @@ MdContent.prototype.getFsPath = function(relPath) {
     return this.contentDirectory + relPath;
 }
 
+// Promise
 MdContent.prototype.getDirectoryAsMarkdown = function(relPath) {
     const _this = this;
     relPath = this.withTrailingSlash(relPath);
@@ -76,17 +83,18 @@ MdContent.prototype.getDirectoryAsMarkdown = function(relPath) {
         .then((files) => {
             var data = files.reduce((s, i) => {
                 return s + "* " + _this.getMdLink(relPath + i) + newLine;
-            })
+            }, '');
+            return data;
         });
 }
 
+// Promise
 MdContent.prototype.getNav = function(relPath, callback) {
     let p = this.getParent(relPath);
-    if (p) {
-        this.get(p + '.sidebar.md', callback);
-    } else {
-        return '/.sidebar.md';
+    if (!p) {
+        p = '/.sidebar.md';
     }
+    return this.get(p);
 }
 
 MdContent.prototype.getParent = function(relPath) {
@@ -94,7 +102,10 @@ MdContent.prototype.getParent = function(relPath) {
     return lin[lin.length-2];
 }
 
-MdContent.prototype.get = function(relPath) {
+MdContent.prototype.get = function(relPath, version) {
+    if (version) {
+        return this.getVersion(relPath, version);
+    }
     console.log("get " + relPath);
     var fsPath = this.getFsPath(relPath);
     const _this = this;
@@ -125,7 +136,10 @@ MdContent.prototype.get = function(relPath) {
 
 /*Promise */ 
 MdContent.prototype.getHistory = function(relPath) {
-    return this.git(['log', '-100', '--pretty=format:<li onClick="restore(\'%H\')">%ar: %aD</li>%n', '.' + relPath]);
+    return this.git(['log', '-100', '--pretty=format:<li onClick="restore(\'%H\')">%ar: %aD</li>%n', '.' + relPath])
+    .catch((e) => {
+        return '';
+    });
 };
 
 /*Promise */ 

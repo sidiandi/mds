@@ -33,7 +33,7 @@ describe("mdApi, a json API for MDS, ", function() {
 
     it("returns source, html ", function(done) {
         mdApi.call({
-            path: '/#/hello.md', 
+            path: '#/hello.md', 
             html: true, 
             history: true })
         .then((r) => {
@@ -43,9 +43,19 @@ describe("mdApi, a json API for MDS, ", function() {
         })
     });
 
+    it("returns directory as markdown", function(done) {
+        mdApi.call({
+            path: '#/', 
+            })
+        .then((r) => {
+            expect(r.source).toEqual('* [.git](/.git)\r\n* [hello](/hello.md)\r\n');
+            done();
+        })
+    });
+
     it("returns html for posted source", function(done) {
         mdApi.call({
-            path: '/#/hello.md',
+            path: '#/hello.md',
             source: '# Mars',
             html: true, 
             history: true })
@@ -58,7 +68,7 @@ describe("mdApi, a json API for MDS, ", function() {
 
     it("commits source", function(done) {
         mdApi.call({
-            path: '/#/test-set.md',
+            path: '#/test-set.md',
             source: '# Mars',
             html: true, 
             history: true,

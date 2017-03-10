@@ -6,6 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 const MdContent = require('./app/mdContentGit');
 const MdRender = require('./app/mdRender');
+const MdApi = require('./app/mdApi');
 
 var app = express();
 
@@ -21,9 +22,10 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const content = new MdContent('C:\\work\\mds-test-content', (err) =>{
+const content = new MdContent('C:\\work\\mds-test-content');
+content.init().then(() => {
   const renderer = new MdRender();
-  app.use('/api', new require('./routes/api')(content, renderer));
+  app.use('/api', new require('./routes/api')(new MdApi(content, renderer)));
   app.use('/source', new require('./routes/source')(content));
   app.use('/render', new require('./routes/render')(content, renderer));
   app.use('/nav', new require('./routes/nav')(content, renderer));

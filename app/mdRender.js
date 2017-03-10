@@ -382,7 +382,7 @@ MdRender.prototype.getHashedHref = function (href, contentPath) {
 MdRender.prototype.renderPlantUmlDiagram = function(id, format) {
     let d = this.extensionData[id];
     if (!d) {
-        callback(undefined);
+        throw new Error("does not exist");
     }
     if (d.png) {
     } else {

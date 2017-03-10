@@ -22,16 +22,24 @@ MdApi.prototype.call = function(req) {
             throw('!req');
         }
 
-        const path = /^\/\#(\/.*)/.exec(req.path)[1];
+        const m = /^#(\/.*)/.exec(req.path);
+        console.log(m);
+        const path = m[1];
         if (!path) {
             throw(req.path);
         }
 
         let res = {
-            path: req.path
+            path: req.path,
         };
 
-        let promises = [];
+        const promises = [];
+
+        if (req.breadCrumbs) {
+            promises.push(Promise.resolve({
+                breadCrumbs: api.render.render(api.content.getBreadcrumbs(path), path)
+            }));
+        }
 
         let doCommit;
         if (req.commit) {
@@ -47,30 +55,38 @@ MdApi.prototype.call = function(req) {
             getSource = Promise.resolve(req.source);
         }
         else {
-            getSource = api.content.get(path);
+            getSource = api.content.get(path, req.version);
         }
-
-        getSource = getSource.then(function(source) { return { source: source }; });
-
+        getSource = getSource.then(function(s) { return { source: s }; });
         promises.push(getSource);
 
+        if (req.navbar) {
+            promises.push(api.content.getNav(path)
+                .then((source) => { return { navbar: api.render.render(source, path)} }));
+        }
+        
         if (req.html) {
             promises.push(getSource.then((r) => {
+                console.log(r);
                 return { html: api.render.render(r.source, path) };
             }));
         }
 
         if (req.history) {
-            const getHistory = api.content.getHistory(path)
+            const getHistory = doCommit
+            .then(() => api.content.getHistory(path))
             .then((history) => { return { history: history }});
             promises.push(getHistory);
         }
 
         return Promise.all(promises).then(r => { 
             // console.log(r);
-            return Object.assign(...r);
+            var x = Object.assign(...r);
+            console.log(x);
+            return x;
         });
     } catch(ex) {
+        console.log(ex);
         return Promise.reject(ex);
     }
 }

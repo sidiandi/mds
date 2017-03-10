@@ -5,62 +5,82 @@ $(document).ready(function(){
     let currentRelPath;
 
     restore = function(commitHash) {
-        $.post('/source' + currentRelPath, { commitHash: commitHash }, (data) => {
-            $('#source').val(data);
-            updateTempContent(data);
+        api({
+            path: currentRelPath,
+            version: commitHash,
+            html: true,
+        }, (data) => {
+            $('article').html(data.html);
+            $('#source').val(data.source);
+        });
+    }
+
+    function api(req, callback) {
+        $.ajax({
+            url: '/api',
+            type: 'POST',
+            data: JSON.stringify(req),
+            contentType: "application/json",
+            complete: (response) => {
+                const data = response.responseJSON;
+                callback(data);
+            }
         });
     }
 
     function navigateTo(relPath) {
         currentRelPath = relPath;
 
-        $.get('/breadCrumbs' + currentRelPath, (data) => {
-            $('#header').html(data);
-        });
-
-        $.get('/render' + currentRelPath, (data) => {
-            $('article').html(data);
-        });
-
-        $.get('/nav' + currentRelPath, (data) => {
-            $('navbar').html(data);
-        });
-
-        $.get('/source' + currentRelPath, (data) => {
-            $('#source').val(data);
-        });
-
-        $.get('/history' + currentRelPath, (data) => {
-            $('history').html(data);
+        api({
+            path: currentRelPath,
+            html: true,
+            breadCrumbs : true,
+            navbar: true,
+            history: true
+            // history: true
+        }, (data) => {
+            $('article').html(data.html);
+            $('#source').val(data.source);
+            $('history').html(data.history);
+            $('header').html(data.breadCrumbs);
+            $('navbar').html(data.navbar);
         });
     }
 
     window.onhashchange = function() {
-        navigateTo(window.location.hash.substr(1));
+        navigateTo(window.location.hash);
     };
 
-    function setContent(content) {
-        $.post('/render' + currentRelPath, { content: content, commit: true }, (data) => {
-            $('#article').html(data);
-
-            $.get('/history' + currentRelPath, (data) => {
-                $('history').html(data);
-            });
+    function setSource(source) {
+        api({
+            path: currentRelPath,
+            source: source,
+            commit: true,
+            html: true,
+            history: true,
+        }, (data) => {
+            $('article').html(data.html);
+            $('history').html(data.history);
         });
     }
 
-    function updateTempContent(content) {
-        $.post('/render' + currentRelPath, { content: content }, (data) => {
-            $('#article').html(data);
+    function updateTempSource(source) {
+        api({
+            path: currentRelPath,
+            source: source,
+            commit: false,
+            html: true,
+        }, (data) => {
+            $('article').html(data.html);
         });
     }
 
     $('#source').keyup(function() {
-        updateTempContent($('#source').val());
+        updateTempSource($('#source').val());
     });
 
     $('#commit').click(function() {
-        setContent($('#source').val());
+        setSource($('#source').val());
     });
 
     window.onhashchange();
