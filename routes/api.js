@@ -8,7 +8,7 @@ module.exports = function(api) {
     console.log(req.body);
     api.call(req.body)
       .then((result) => {
-        console.log(result);
+        // console.log(result);
         res.send(result);
       })
       .catch((err) => {
