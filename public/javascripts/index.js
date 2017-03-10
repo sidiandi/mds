@@ -28,8 +28,16 @@ $(document).ready(function(){
         });
     }
 
-    function navigateTo(relPath) {
-        currentRelPath = relPath;
+    function getPathFromHash(hash) {
+        if (hash === '') {
+            return '#/Readme.md';
+        }
+
+        return hash;
+    }
+
+    function navigateTo(hash) {
+        currentRelPath = getPathFromHash(hash);
 
         api({
             path: currentRelPath,

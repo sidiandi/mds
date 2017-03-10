@@ -71,6 +71,9 @@ MdContent.prototype.createEmptyFileInGit = function(relPath) {
 }
 
 MdContent.prototype.getFsPath = function(relPath) {
+    if (relPath.startsWith('/.git')) {
+        throw Error('illegal path');
+    }
     return this.contentDirectory + relPath;
 }
 
@@ -81,7 +84,9 @@ MdContent.prototype.getDirectoryAsMarkdown = function(relPath) {
     var fsPath = this.getFsPath(relPath);
     return promisify(fs.readdir)(fsPath)
         .then((files) => {
-            var data = files.reduce((s, i) => {
+            var data = files
+                .filter((i) => { return !(i === '.git')})
+                .reduce((s, i) => {
                 return s + "* " + _this.getMdLink(relPath + i) + newLine;
             }, '');
             return data;
