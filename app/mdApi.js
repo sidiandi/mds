@@ -44,7 +44,7 @@ MdApi.prototype.call = function(req) {
         let doCommit;
         if (req.commit) {
             doCommit = api.content.set(path, req.source)
-            .then((r) => { return { commit: true }; });
+            .then((r) => { return { commit: true, status: `${path} committed.` }; });
         } else {
             doCommit = Promise.resolve({ commit : false });
         }

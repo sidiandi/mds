@@ -15,6 +15,14 @@ $(document).ready(function(){
         });
     }
 
+    function showStatus(text) {
+        const s = $('status');
+        s.html(text);
+        s.slideDown('fast', function(){
+          window.setTimeout(function(){ s.slideUp()}, 5000);
+        });
+    }
+
     function api(req, callback) {
         $.ajax({
             url: '/api',
@@ -22,8 +30,13 @@ $(document).ready(function(){
             data: JSON.stringify(req),
             contentType: "application/json",
             complete: (response) => {
-                const data = response.responseJSON;
-                callback(data);
+                if (callback) {
+                    const data = response.responseJSON;
+                    if (data.status) {
+                        showStatus(data.status);
+                    }
+                    callback(data);
+                }
             }
         });
     }
@@ -32,11 +45,20 @@ $(document).ready(function(){
         if (hash === '') {
             return '#/Readme.md';
         }
-
         return hash;
     }
 
+    function commitWithoutFeedback() {
+        api({
+            path: currentRelPath,
+            source: $('#source').val(),
+            commit: true,
+        });
+    }
+
     function navigateTo(hash) {
+        commitWithoutFeedback();
+
         currentRelPath = getPathFromHash(hash);
 
         api({
@@ -60,15 +82,22 @@ $(document).ready(function(){
     };
 
     function setSource(source) {
+    }
+
+    function commit() {
+        const source = $('#source').val();
+
         api({
             path: currentRelPath,
             source: source,
             commit: true,
             html: true,
             history: true,
+            navbar: true,
         }, (data) => {
             $('article').html(data.html);
             $('history').html(data.history);
+            $('navbar').html(data.navbar);
         });
     }
 
@@ -83,13 +112,23 @@ $(document).ready(function(){
         });
     }
 
+    // Binding keys
+    $('#source').bind('keydown', 'ctrl+return', function() {
+        commit();
+    });
+
     $('#source').keyup(function() {
         updateTempSource($('#source').val());
     });
 
     $('#commit').click(function() {
-        setSource($('#source').val());
+        commit();
     });
 
+    $(window).on('unload', function() {
+        commitWithoutFeedback();
+    });
+    
     window.onhashchange();
+
 });

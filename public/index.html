@@ -7,6 +7,7 @@
   <link href='http://fonts.googleapis.com/css?family=PT+Mono' rel='stylesheet' type='text/css'>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
+  <script src="/javascripts/jquery.hotkeys.js"></script>
   <script src="/javascripts/index.js"></script>
 </head>
 <body>
@@ -15,8 +16,9 @@
   <navbar></navbar>
   <article id="article"></article>
   <edit>
+    <status></status>
     <div>
-      <button id="commit">Commit</button>
+      <button title="[Ctrl]+[Enter]" id="commit">Commit</button>
     </div>
     <editField>
       <textarea id="source"></textarea>
