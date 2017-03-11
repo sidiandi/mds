@@ -93,13 +93,30 @@ MdContent.prototype.getDirectoryAsMarkdown = function(relPath) {
         });
 }
 
+function matchAll(re, text) {
+    let a = [];
+    while ((m = re.exec(text)) !== null) {
+        a.push(m);
+    }
+    return a;
+}
+
+function getToc(markDown) {
+    const re = /^#+\s+(.*)$/mg;
+    let m = matchAll(re, markDown).map((i) => { return i[0]; });
+    console.log(m);
+    return m.join('\n');
+}
+
 // Promise
 MdContent.prototype.getNav = function(relPath, callback) {
-    let p = this.getParent(relPath);
-    if (!p) {
-        p = '/.sidebar.md';
+    const _this = this;
+    let parent = this.getParent(relPath);
+    if (!parent) {
+        parent = '/.sidebar.md';
     }
-    return this.get(p);
+    return Promise.all([_this.get(parent), _this.get(relPath)])
+        .then((a) => { return a[0] + "\n----\n" + getToc(a[1]); });
 }
 
 MdContent.prototype.getParent = function(relPath) {

@@ -80,9 +80,7 @@ MdApi.prototype.call = function(req) {
         }
 
         return Promise.all(promises).then(r => { 
-            // console.log(r);
             var x = Object.assign(...r);
-            console.log(x);
             return x;
         });
     } catch(ex) {

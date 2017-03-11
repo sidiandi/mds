@@ -32,6 +32,17 @@ navbar {
   border-right: 1px solid #e1e4e8;
 }
 
+navbar h1,
+navbar h2, 
+navbar h3, 
+navbar h4, 
+navbar h5, 
+navbar h6,
+navbar li {
+  display: block;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
 article { 
 overflow-y: auto;
 flex: 1;
