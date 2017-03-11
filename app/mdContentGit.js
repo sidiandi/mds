@@ -141,9 +141,16 @@ MdContent.prototype.get = function(relPath, version) {
 
 /*Promise */ 
 MdContent.prototype.getHistory = function(relPath) {
-    return this.git(['log', '-100', '--pretty=format:<li onClick="restore(\'%H\')">%ar: %aD</li>%n', '.' + relPath])
+    let json;
+    return this.git(['log', '-20', `--pretty=format:,{ "version": "%H", "relativeDate": "%ar", "date": "%ad", "message": "%s" }`, '.' + relPath])
+    .then(rawLog => { 
+        json = '[' + rawLog.substr(1) + ']';
+        return JSON.parse(json);
+    })
     .catch((e) => {
-        return '';
+        console.log(json);
+        console.log(e);
+        return [];
     });
 };
 
@@ -160,7 +167,7 @@ MdContent.prototype.set = function(relPath, data) {
         fs.exists(fsPath, (fileExists) => {
             if (fileExists) {
                 fs.writeFile(fsPath, data, (err) => {
-                    _this.git(['commit', '-m', 'wiki', '.' + relPath])
+                    _this.git(['commit', '--allow-empty-message', '-m', '', '.' + relPath])
                     .then(resolve, reject);
             });
         } else {

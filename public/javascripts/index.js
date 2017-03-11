@@ -35,6 +35,9 @@ $(document).ready(function(){
                     if (data.status) {
                         showStatus(data.status);
                     }
+                    if (data.history) {
+                        setHistory(data.history);
+                    }
                     callback(data);
                 }
             }
@@ -71,10 +74,15 @@ $(document).ready(function(){
         }, (data) => {
             $('article').html(data.html);
             $('#source').val(data.source);
-            $('history').html(data.history);
             $('header').html(data.breadCrumbs);
             $('navbar').html(data.navbar);
         });
+    }
+
+    function setHistory(h) {
+        const li = h.map((i) => { return `<li onClick="restore('${i.version}')">${i.relativeDate} (${i.date}) - ${i.message}</li>`});
+        const html = "<ul>" + li.join('') + "</ul>";
+         $('history').html(html);
     }
 
     window.onhashchange = function() {
@@ -96,7 +104,6 @@ $(document).ready(function(){
             navbar: true,
         }, (data) => {
             $('article').html(data.html);
-            $('history').html(data.history);
             $('navbar').html(data.navbar);
         });
     }
