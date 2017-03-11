@@ -47,13 +47,13 @@ MdContent.prototype.git = function(args) {
     const _this = this;
     return new Promise(function(resolve, reject) {
         execFile('git', args, { cwd: _this.contentDirectory }, (error, stdout, stderr) => {
-            console.log({
-                stderr: stderr,
-                stdout: stdout,
-                args: args,
-                error: error
-            });
             if (error) {
+                console.log({
+                    stderr: stderr,
+                    stdout: stdout,
+                    args: args,
+                    error: error
+                });
                 reject(error);
             }
             else {

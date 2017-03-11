@@ -1,20 +1,27 @@
+const promisify = require("es6-promisify");
 const os = require('os');
 const MdContent = require('../app/mdContentGit');
 const MdRender = require('../app/mdRender');
 const MdApi = require('../app/mdApi');
 const jasmine = require('jasmine');
+const rmdir = promisify(require('rmdir'));
 
 describe("mdApi, a json API for MDS, ", function() {
 
     let mdApi;
+    let mdContent;
 
     beforeAll(function(done){
-        let mdContent = new MdContent(os.tmpdir() + "/mds-test-content");
-        mdContent.init()
-        .then(() => { return mdContent.set('/hello.md', '# Hello, world!') })
-        .then(() => { mdApi = new MdApi(mdContent, new MdRender(mdContent)); })
-        .then(() => { console.log('beforeAll(function(done){'); })
-        .then(done);
+        const dir = os.tmpdir() + "/mds-test-content";
+        rmdir(dir)
+            .then(() => {
+                mdContent = new MdContent(dir);
+                return mdContent.init(); 
+            })
+            .then(() => { return mdContent.set('/hello.md', '# Hello, world!') })
+            .then(() => { mdApi = new MdApi(mdContent, new MdRender(mdContent)); })
+            .then(() => { console.log('beforeAll(function(done){'); })
+            .then(done);
     });
 
     it("returns error when called with null", function(done) {
@@ -48,7 +55,7 @@ describe("mdApi, a json API for MDS, ", function() {
             path: '#/', 
             })
         .then((r) => {
-            expect(r.source).toEqual('* [.git](/.git)\r\n* [hello](/hello.md)\r\n');
+            expect(r.source).toEqual('* [hello](/hello.md)\r\n');
             done();
         })
     });
