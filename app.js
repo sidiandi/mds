@@ -7,6 +7,7 @@ var bodyParser = require('body-parser');
 const MdContent = require('./app/mdContentGit');
 const MdRender = require('./app/mdRender');
 const MdApi = require('./app/mdApi');
+const MdNav = require('./app/mdNav');
 
 var app = express();
 
@@ -25,7 +26,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 const content = new MdContent('C:\\work\\mds-test-content');
 content.init().then(() => {
   const renderer = new MdRender();
-  app.use('/api', new require('./routes/api')(new MdApi(content, renderer)));
+  app.use('/api', new require('./routes/api')(new MdApi(content, renderer, new MdNav(content, renderer))));
   app.use('/source', new require('./routes/source')(content));
   app.use('/render', new require('./routes/render')(content, renderer));
   app.use('/nav', new require('./routes/nav')(content, renderer));

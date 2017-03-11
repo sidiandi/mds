@@ -347,6 +347,7 @@ marked.Renderer.prototype.link = function(href, title, text) {
 // Constructor
 function MdRender() {
     this.extensionData = {};
+    this.lexer = marked.lexer;
 }
 
 function canonic(x) {
@@ -407,7 +408,8 @@ MdRender.prototype.render = function(src, relPath) {
         breaks: true,
         tables: true,
         contentPath: relPath,
-        mdRender: this
+        mdRender: this,
+        headerPrefix: '',
     };
 
     let tokens = marked.lexer(src);

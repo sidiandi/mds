@@ -6,22 +6,28 @@ const MdApi = require('../app/mdApi');
 const jasmine = require('jasmine');
 const rmdir = promisify(require('rmdir'));
 
+function createTestApi() {
+    let mdApi;
+    let mdContent;
+    const dir = os.tmpdir() + "/mds-test-content";
+    return rmdir(dir)
+        .then(() => {
+            mdContent = new MdContent(dir);
+            return mdContent.init(); 
+        })
+        .then(() => { return mdContent.set('/hello.md', '# Hello, world!') })
+        .then(() => { mdApi = new MdApi(mdContent, new MdRender(mdContent)); return mdApi; })
+}
+
 describe("mdApi, a json API for MDS, ", function() {
 
     let mdApi;
     let mdContent;
 
     beforeAll(function(done){
-        const dir = os.tmpdir() + "/mds-test-content";
-        rmdir(dir)
-            .then(() => {
-                mdContent = new MdContent(dir);
-                return mdContent.init(); 
-            })
-            .then(() => { return mdContent.set('/hello.md', '# Hello, world!') })
-            .then(() => { mdApi = new MdApi(mdContent, new MdRender(mdContent)); })
-            .then(() => { console.log('beforeAll(function(done){'); })
-            .then(done);
+        createTestApi()
+        .then((a) => { mdApi = a})
+        .then(done);
     });
 
     it("returns error when called with null", function(done) {
@@ -68,7 +74,7 @@ describe("mdApi, a json API for MDS, ", function() {
             history: true })
         .then((r) => {
             expect(r.source).toEqual('# Mars');
-            expect(r.html).toEqual('<h1 id="undefinedmars">Mars</h1>\n');
+            expect(r.html).toEqual('<h1 id="mars">Mars</h1>\n');
             done();
         })
     });
@@ -83,9 +89,10 @@ describe("mdApi, a json API for MDS, ", function() {
         .then((r) => {
             expect(r.commit).toEqual(true);
             expect(r.source).toEqual('# Mars');
-            expect(r.html).toEqual('<h1 id="undefinedmars">Mars</h1>\n');
+            expect(r.html).toEqual('<h1 id="mars">Mars</h1>\n');
             done();
         })
     });
 });
 
+module.exports = { createTestApi: createTestApi };

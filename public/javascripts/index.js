@@ -59,24 +59,48 @@ $(document).ready(function(){
         });
     }
 
+    function scrollToId(id) { 
+        if (id) {
+            const scrollTo = $(id);
+            const container = $('article');
+            container.animate({
+                scrollTop: scrollTo.offset().top - container.offset().top + container.scrollTop()
+            });
+        }
+    }
+
     function navigateTo(hash) {
-        commitWithoutFeedback();
+        const hashParts = getPathFromHash(hash).split('#');
+        const path = '#' + hashParts[1];
+        let id = hashParts[2];
+        if (id) {
+            id = '#' + id;
+        }
 
-        currentRelPath = getPathFromHash(hash);
+        console.log({ currentRelPath: currentRelPath, path: path });
 
-        api({
-            path: currentRelPath,
-            html: true,
-            breadCrumbs : true,
-            navbar: true,
-            history: true
-            // history: true
-        }, (data) => {
-            $('article').html(data.html);
-            $('#source').val(data.source);
-            $('header').html(data.breadCrumbs);
-            $('navbar').html(data.navbar);
-        });
+        if (currentRelPath === path) {
+            scrollToId(id);
+        }
+        else {
+            commitWithoutFeedback();
+
+            api({
+                path: path,
+                html: true,
+                breadCrumbs : true,
+                navbar: true,
+                history: true
+                // history: true
+            }, (data) => {
+                currentRelPath = path;
+                $('article').html(data.html);
+                $('#source').val(data.source);
+                $('header').html(data.breadCrumbs);
+                $('navbar').html(data.navbar);
+                scrollToId(id);
+            });
+        }
     }
 
     function setHistory(h) {

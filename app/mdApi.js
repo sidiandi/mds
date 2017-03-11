@@ -7,9 +7,10 @@ const fs = require('fs');
 const touch = require("touch");
 
 // Constructor
-function MdApi(content, render) {
+function MdApi(content, render, nav) {
     this.content = content;
     this.render = render;
+    this.nav = nav;
 }
 
 MdApi.prototype.call = function(req) {
@@ -22,8 +23,7 @@ MdApi.prototype.call = function(req) {
             throw('!req');
         }
 
-        const m = /^#(\/.*)/.exec(req.path);
-        console.log(m);
+        const m = /^#(\/[^#]*)/.exec(req.path);
         const path = m[1];
         if (!path) {
             throw(req.path);
@@ -61,7 +61,7 @@ MdApi.prototype.call = function(req) {
         promises.push(getSource);
 
         if (req.navbar) {
-            promises.push(api.content.getNav(path)
+            promises.push(api.nav.get(path)
                 .then((source) => { return { navbar: api.render.render(source, path)} }));
         }
         
