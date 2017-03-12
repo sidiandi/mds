@@ -8,9 +8,33 @@ const touch = require("touch");
 
 // Constructor
 function MdApi(content, render, nav) {
+    if (!content) {
+        throw 'no content';
+    }
     this.content = content;
     this.render = render;
     this.nav = nav;
+}
+
+function getPath(req) {
+    if (!req) {
+        throw('req is not defined');
+    }
+
+    if (!(req.path)) { 
+        throw('req.path is not defined');
+    }
+
+    let path;
+    try
+    {
+        const m = /^#(\/[^#]*)/.exec(req.path);
+        path = m[1];
+        return path;
+    }
+    catch (e) {
+        throw('not a valid path: ' + req.path)
+    }
 }
 
 MdApi.prototype.call = function(req) {
@@ -19,15 +43,8 @@ MdApi.prototype.call = function(req) {
         const api = this;
         console.log(req);
 
-        if (!req) {
-            throw('!req');
-        }
-
-        const m = /^#(\/[^#]*)/.exec(req.path);
-        const path = m[1];
-        if (!path) {
-            throw(req.path);
-        }
+        const path = getPath(req);
+        const articlePath = path.endsWith('/') ? path + '/Readme.md' : path;
 
         let res = {
             path: req.path,
@@ -43,8 +60,8 @@ MdApi.prototype.call = function(req) {
 
         let doCommit;
         if (req.commit) {
-            doCommit = api.content.set(path, req.source)
-            .then((r) => { return { commit: true, status: `${path} committed.` }; });
+            doCommit = api.content.set(articlePath, req.source)
+            .then((r) => { return { commit: true, status: `${articlePath} committed.` }; });
         } else {
             doCommit = Promise.resolve({ commit : false });
         }
@@ -55,26 +72,26 @@ MdApi.prototype.call = function(req) {
             getSource = Promise.resolve(req.source);
         }
         else {
-            getSource = api.content.get(path, req.version);
+            getSource = api.content.get(articlePath, req.version);
         }
         getSource = getSource.then(function(s) { return { source: s }; });
         promises.push(getSource);
 
         if (req.navbar) {
-            promises.push(api.nav.get(path)
+            promises.push(api.nav.get(articlePath)
                 .then((source) => { return { navbar: api.render.render(source, path)} }));
         }
         
         if (req.html) {
             promises.push(getSource.then((r) => {
                 console.log(r);
-                return { html: api.render.render(r.source, path) };
+                return { html: api.render.render(r.source, articlePath) };
             }));
         }
 
         if (req.history) {
             const getHistory = doCommit
-            .then(() => api.content.getHistory(path))
+            .then(() => api.content.getHistory(articlePath))
             .then((history) => { return { history: history }});
             promises.push(getHistory);
         }

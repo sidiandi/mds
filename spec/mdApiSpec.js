@@ -4,19 +4,11 @@ const MdContent = require('../app/mdContentGit');
 const MdRender = require('../app/mdRender');
 const MdApi = require('../app/mdApi');
 const jasmine = require('jasmine');
-const rmdir = promisify(require('rmdir'));
+const mdContentGitSpec = require('./mdContentGitSpec');
 
 function createTestApi() {
-    let mdApi;
-    let mdContent;
-    const dir = os.tmpdir() + "/mds-test-content";
-    return rmdir(dir)
-        .then(() => {
-            mdContent = new MdContent(dir);
-            return mdContent.init(); 
-        })
-        .then(() => { return mdContent.set('/hello.md', '# Hello, world!') })
-        .then(() => { mdApi = new MdApi(mdContent, new MdRender(mdContent)); return mdApi; })
+    return mdContentGitSpec.createTestContent()
+        .then((content) => { return new MdApi(content, new MdRender(content)); });
 }
 
 describe("mdApi, a json API for MDS, ", function() {
@@ -38,9 +30,10 @@ describe("mdApi, a json API for MDS, ", function() {
     });
 
     it("returns error when called with invalid path", function(done) {
-        mdApi.call({ path: '/Readme.md' }).then(null, (e) => {
-            expect(e).toBeTruthy();
-            done();
+        mdApi.call({ path: '/Readme.md' })
+            .catch((e) => {
+                expect(e).toBeTruthy();
+                done();
         })
     });
 
@@ -54,16 +47,7 @@ describe("mdApi, a json API for MDS, ", function() {
             expect(r.history).toBeDefined();
             done();
         })
-    });
-
-    it("returns directory as markdown", function(done) {
-        mdApi.call({
-            path: '#/', 
-            })
-        .then((r) => {
-            expect(r.source).toEqual('* [hello](/hello.md)\r\n');
-            done();
-        })
+        .catch((e) => { expect(e).toBeFalsy(); done(); });
     });
 
     it("returns html for posted source", function(done) {
@@ -77,6 +61,7 @@ describe("mdApi, a json API for MDS, ", function() {
             expect(r.html).toEqual('<h1 id="mars">Mars</h1>\n');
             done();
         })
+        .catch((e) => { expect(e).toBeFalsy(); done(); });
     });
 
     it("commits source", function(done) {
@@ -92,6 +77,7 @@ describe("mdApi, a json API for MDS, ", function() {
             expect(r.html).toEqual('<h1 id="mars">Mars</h1>\n');
             done();
         })
+        .catch((e) => { expect(e).toBeFalsy(); done(); });
     });
 });
 

@@ -1,14 +1,47 @@
+const promisify = require("es6-promisify");
 const os = require('os');
+const fs = require('fs');
+const rmdir = promisify(require('rmdir'));
 const MdContent = require('../app/mdContentGit');
 const jasmine = require('jasmine');
+
+function ensureNotExists(dir) {
+    return new Promise((resolve, reject) => {
+            fs.exists(dir, (r) => resolve(r));
+    })
+    .then((dirExists) => {
+        if (dirExists) {
+            return rmdir(dir);
+        } else {
+            return Promise.resolve(true);
+        }
+    });
+}
+
+function createTestContent() {
+    let mdContent;
+    const dir = os.tmpdir() + "/mds-test-content";
+    return ensureNotExists(dir)
+        .then(() => {
+            mdContent = new MdContent(dir);
+            return mdContent.init(); 
+        })
+        .then(() => { return mdContent.set('/hello.md', '# Hello, world!') })
+        .then(() => { return mdContent.set('/a/b/c/d.md', '# d') })
+        .then(() => { return mdContent; })
+        .catch((e) => {
+            console.log(e);
+        });
+}
 
 describe("mdContentGit stores Markdown Content in a git repository", function() {
 
     let mdContent;
 
     beforeAll(function(done){
-        mdContent = new MdContent(os.tmpdir() + "/mds-test-content");
-        mdContent.init().then(done);
+        createTestContent()
+            .then((c) => { mdContent = c; })
+            .then(done);
     });
 
     it("gets content", function(done) {
@@ -58,3 +91,6 @@ describe("mdContentGit stores Markdown Content in a git repository", function() 
     });
 });
 
+module.exports = {
+ createTestContent: createTestContent   
+}
