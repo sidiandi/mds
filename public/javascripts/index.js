@@ -38,6 +38,9 @@ $(document).ready(function(){
                     if (data.history) {
                         setHistory(data.history);
                     }
+                    if (data.title) {
+                        document.title = data.title;
+                    }
                     callback(data);
                 }
             }

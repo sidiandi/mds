@@ -88,7 +88,7 @@ marked.Renderer.prototype.link = function(href, title, text) {
       };
 
       if (cap = this.rules.atEnd.exec(src)) {
-          token.text = src.substring(0, cap.index);
+          token.text = "@start" + token.lang + "\r\n" + src.substring(0, cap.index) + "\r\n" + "@end" + token.lang;
           src = src.substring(cap.index + cap[0].length);
           this.tokens.push(token);
           continue;

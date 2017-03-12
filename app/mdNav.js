@@ -16,20 +16,30 @@ function getHeadingIndent(depth) {
     return indent;
 }
 
-MdNav.prototype.get = function(path) {
-    const getToc = this.content.get(path)
+// Promise
+MdNav.prototype.getTableOfContents = function(path) {
+    const _this = this;
+    return this.content.get(path)
         .then((source) => {
-            const tokens = this.render.lexer(source);
+            const tokens = _this.render.lexer(source);
             const headings = tokens.filter((i) => { return i.type === 'heading'; });
             toc = headings
                 .map((i) => { return `${getHeadingIndent(i.depth)}* [${i.text}](${path}#${getHeadingId(i.text)})`; })
                 .join('\n');
             return toc;
         });
-    const getDir = this.content.get(this.content.getParent(path));
+}
 
-    return Promise.all([getDir, getToc]).then((a) => {
-        return a.join('\n----\n');
+// Promise
+MdNav.prototype.get = function(path) {
+    const _this = this;
+    const getToc = _this.getTableOfContents(path);
+    const parent = _this.content.getParent(path);
+    const getParentDir = parent ? _this.content.getDirectoryAsMarkdown(parent) : Promise.resolve(undefined);
+    const getDir = _this.content.getDirectoryAsMarkdown(path);
+
+    return Promise.all([getParentDir, getDir, getToc]).then((a) => {
+        return a.filter(i => i).join('\n----\n');
     });
 }
 

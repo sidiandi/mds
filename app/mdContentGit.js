@@ -8,6 +8,7 @@ const mkdirp = promisify(require('mkdirp'));
 const touch = promisify(require("touch"));
 const path = require('path');
 const rmdir = require('rmdir');
+const ls = require('ls');
 
 const newLine = '\r\n';
 
@@ -78,19 +79,20 @@ MdContent.prototype.getFsPath = function(relPath) {
 }
 
 // Promise
-MdContent.prototype.getDirectoryAsMarkdown = function(relPath) {
+MdContent.prototype.getDirectoryAsMarkdown = function(path) {
     const _this = this;
-    relPath = this.withTrailingSlash(relPath);
-    var fsPath = this.getFsPath(relPath);
-    return promisify(fs.readdir)(fsPath)
-        .then((files) => {
-            var data = files
-                .filter((i) => { return !(i === '.git')})
-                .reduce((s, i) => {
-                return s + "* " + _this.getMdLink(relPath + i) + newLine;
-            }, '');
-            return data;
-        });
+    path = this.withTrailingSlash(path);
+    const fsPath = this.getFsPath(path);
+    const children = ls(fsPath  + '*');
+    console.log(children);
+
+    return Promise.resolve(children
+        .filter((i) => { return !(i.name === '.git')})
+        .reduce((s, i) => {
+                const dirPostFix = (i.stat.isDirectory() ? '/' : '');
+                c = path + i.file + dirPostFix
+                return s + `* [${_this.getTitleFromRelPath(c)}](${c})${newLine}`;
+        }, ''));
 }
 
 function matchAll(re, text) {
@@ -208,7 +210,8 @@ MdContent.prototype.getMdLink = function(relPath) {
 }
 
 MdContent.prototype.getBreadcrumbs = function(relPath) {
-    return this.getLineage(relPath).map((i) => {
+    let crumbs = relPath === '' ? ['/'] : this.getLineage(relPath);
+    return crumbs.map((i) => {
         return this.getMdLink(i);
     }).join(' - ');
 }

@@ -10,6 +10,13 @@ describe("mdRender Markdown Renderer", function() {
         mdRender = new MdRender();
     });
 
+    it("converts relative hrefs into hash (#...) hrefs", function() {
+        expect(mdRender.getHashedHref('/', '/a/b/c.md')).toEqual('/#/');
+        expect(mdRender.getHashedHref('d.md', '/a/b/c.md')).toEqual('/#/a/b/d.md');
+        expect(mdRender.getHashedHref('d.md', '/a/b/')).toEqual('/#/a/b/d.md');
+        expect(mdRender.getHashedHref('/e/f/g.md', '/a/b/c.md')).toEqual('/#/e/f/g.md');
+    });
+
     it("renders markdown", function() {
         expect(mdRender.render('[Home](/)', '/Readme.md')).toEqual('<p><a href="/#/">Home</a></p>\n');
         expect(mdRender.render('[[Other Page]]', '/Readme.md')).toEqual('<p><a href="/#/Other%20Page.md">Other Page</a></p>\n');

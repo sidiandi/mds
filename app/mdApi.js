@@ -48,6 +48,7 @@ MdApi.prototype.call = function(req) {
 
         let res = {
             path: req.path,
+            title: api.content.getTitleFromRelPath(path)
         };
 
         const promises = [];
@@ -78,7 +79,7 @@ MdApi.prototype.call = function(req) {
         promises.push(getSource);
 
         if (req.navbar) {
-            promises.push(api.nav.get(articlePath)
+            promises.push(api.nav.get(path)
                 .then((source) => { return { navbar: api.render.render(source, path)} }));
         }
         
@@ -97,7 +98,7 @@ MdApi.prototype.call = function(req) {
         }
 
         return Promise.all(promises).then(r => { 
-            var x = Object.assign(...r);
+            var x = Object.assign(res, ...r);
             return x;
         });
     } catch(ex) {
