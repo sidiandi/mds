@@ -22,7 +22,27 @@ describe("mdRender Markdown Renderer", function() {
         expect(mdRender.render('[[Other Page]]', '/Readme.md')).toEqual('<p><a href="/#/Other%20Page.md">Other Page</a></p>\n');
     });
 
-    it("lets customize the lexer", function() {
+    it("processes @firstname.lastname", function() {
+        let options = {};
+        let lexer = new marked.Lexer(options);
+        let source = `# Mentions Example
+
+[@andreas.grimme](mailto:andreas.grimme@calag.de)
+
+@andreas.grimme
+
+Some blind text here
+
+* adsfjaskdf
+* al;sdfkjasdlf
+* @donald.duck
+* lkjdfasdf
+`
+        let tokens = lexer.lex(source);
+    })
+
+
+    it("processes @startuml", function() {
         let options = {};
         let lexer = new marked.Lexer(options);
         let source = `# PlantUML Examples

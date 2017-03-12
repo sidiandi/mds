@@ -5,6 +5,8 @@ const url = require('url');
 const mkdirp = require('mkdirp');
 const fs = require('fs');
 const touch = require("touch");
+const nodemailer = require("nodemailer");
+const ls = require('ls');
 
 // Constructor
 function MdApi(content, render, nav) {
@@ -37,18 +39,35 @@ function getPath(req) {
     }
 }
 
+MdApi.prototype.onReply = function(result) {
+}
+
+MdApi.prototype.search = function(req) {
+    const _this = this;
+    const source = `# Search for  ${req.search}`;
+
+    return _this.content.search(req.search)
+        .then((result) => {
+            return _this.render.parseAndRender(result, '/')
+        });
+}
+
 MdApi.prototype.call = function(req) {
     try
     {
+        if (req.search) {
+            return this.search(req);
+        }
+
         const api = this;
-        console.log(req);
 
         const path = getPath(req);
         const articlePath = path.endsWith('/') ? path + '/Readme.md' : path;
 
         let res = {
             path: req.path,
-            title: api.content.getTitleFromRelPath(path)
+            title: api.content.getTitleFromRelPath(path),
+            commit: req.commit,
         };
 
         const promises = [];
@@ -85,8 +104,7 @@ MdApi.prototype.call = function(req) {
         
         if (req.html) {
             promises.push(getSource.then((r) => {
-                console.log(r);
-                return { html: api.render.render(r.source, articlePath) };
+                return api.render.parseAndRender(r.source, articlePath);
             }));
         }
 
@@ -99,6 +117,7 @@ MdApi.prototype.call = function(req) {
 
         return Promise.all(promises).then(r => { 
             var x = Object.assign(res, ...r);
+            this.onReply(x);
             return x;
         });
     } catch(ex) {

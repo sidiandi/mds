@@ -84,7 +84,6 @@ MdContent.prototype.getDirectoryAsMarkdown = function(path) {
     path = this.withTrailingSlash(path);
     const fsPath = this.getFsPath(path);
     const children = ls(fsPath  + '*');
-    console.log(children);
 
     return Promise.resolve(children
         .filter((i) => { return !(i.name === '.git')})
@@ -281,8 +280,23 @@ MdContent.prototype.withTrailingSlash = function(relPath) {
     return relPath;
 }
 
-MdContent.prototype.api = function(req, callback) {
-    
+MdContent.prototype.search = function(pattern, callback) {
+    const _this = this;
+    return ((pattern.length >= 3) ? (this.git(['grep', '-i', pattern])
+        .then(gitOutput => {
+            gitOutput = gitOutput.match(/[^\r\n]+/g)
+                .map((line) => {
+                    const p = line.split(':');
+                    const path = '/' + p[0];
+                    const text = p[1];
+                    return `${_this.getMdLink(path)}: ${text}`;
+                })
+                .join(newLine);
+            return gitOutput;
+        })) : Promise.resolve('Search term must have 3 or more characters.'))
+        .then(md => {
+            return `# Search for ${pattern}\r\n${md}`;
+        });
 }
 
 // export the class

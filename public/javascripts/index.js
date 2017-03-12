@@ -10,7 +10,6 @@ $(document).ready(function(){
             version: commitHash,
             html: true,
         }, (data) => {
-            $('article').html(data.html);
             $('#source').val(data.source);
         });
     }
@@ -30,8 +29,8 @@ $(document).ready(function(){
             data: JSON.stringify(req),
             contentType: "application/json",
             complete: (response) => {
-                if (callback) {
-                    const data = response.responseJSON;
+                const data = response.responseJSON;
+                if (data) {
                     if (data.status) {
                         showStatus(data.status);
                     }
@@ -41,7 +40,19 @@ $(document).ready(function(){
                     if (data.title) {
                         document.title = data.title;
                     }
-                    callback(data);
+                    if (data.breadCrumbs) {
+                        $('breadCrumbs').html(data.breadCrumbs);
+                    }
+                    if (data.html) {
+                        $('article').html(data.html);
+                    }
+                    if (data.navbar) {
+                        $('navbar').html(data.navbar);
+                    }
+
+                    if (callback) {
+                        callback(data);
+                    }
                 }
             }
         });
@@ -97,10 +108,7 @@ $(document).ready(function(){
                 // history: true
             }, (data) => {
                 currentRelPath = path;
-                $('article').html(data.html);
                 $('#source').val(data.source);
-                $('header').html(data.breadCrumbs);
-                $('navbar').html(data.navbar);
                 scrollToId(id);
             });
         }
@@ -130,8 +138,6 @@ $(document).ready(function(){
             history: true,
             navbar: true,
         }, (data) => {
-            $('article').html(data.html);
-            $('navbar').html(data.navbar);
         });
     }
 
@@ -142,7 +148,6 @@ $(document).ready(function(){
             commit: false,
             html: true,
         }, (data) => {
-            $('article').html(data.html);
         });
     }
 
@@ -151,9 +156,28 @@ $(document).ready(function(){
         commit();
     });
 
+    function searchFocus() {
+        $('#search').focus();
+        $('#search').select();
+    }
+
+    $('#source').bind('keydown', 'ctrl+/', function() {
+        searchFocus();
+    });
+
+    $(document).bind('keydown', 'ctrl+/', function() {
+        searchFocus();
+    });
+
     $('#source').keyup(function() {
         updateTempSource($('#source').val());
     });
+
+    $('#search').keyup(function() {
+        api({ 
+            search: $('#search').val()
+        });
+    })
 
     $('#commit').click(function() {
         commit();

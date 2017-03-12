@@ -53,10 +53,23 @@ navbar li {
   padding-right: 8px;
 }
 
+header { 
+  display: flex;
+  flex-direction: row;
+}
+
+breadCrumbs, search {
+  padding: 4px;
+}
+
+breadCrumbs {
+  flex: 1;
+}
+
 article { 
-overflow-y: auto;
-flex: 1;
-padding: 4px;
+  overflow-y: auto;
+  flex: 1;
+  padding: 4px;
 }
 
 edit { 

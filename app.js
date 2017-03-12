@@ -8,6 +8,10 @@ const MdContent = require('./app/mdContentGit');
 const MdRender = require('./app/mdRender');
 const MdApi = require('./app/mdApi');
 const MdNav = require('./app/mdNav');
+const nodemailer = require('nodemailer');
+const mailOptions = require('c:\\temp\\mailOptions.js');
+
+const transporter = nodemailer.createTransport(mailOptions.get());
 
 var app = express();
 
@@ -26,7 +30,29 @@ app.use(express.static(path.join(__dirname, 'public')));
 const content = new MdContent('C:\\work\\mds-test-content');
 content.init().then(() => {
   const renderer = new MdRender();
-  app.use('/api', new require('./routes/api')(new MdApi(content, renderer, new MdNav(content, renderer))));
+  const api = new MdApi(content, renderer, new MdNav(content, renderer));
+  
+  api.onReply = function(result) {
+    if (result.commit) {
+      for (mail of result.notify) {
+        transporter.sendMail({
+          from: 'andreas.grimme@gmx.net',
+          to: mail,
+          subject: `${result.path} has changed`,
+          text: result.source,
+          html: result.html
+        })
+        .then((r) => {
+          console.log(r);
+        })
+        .catch(e => {
+          console.log(e);
+        });
+      }
+    }
+  };
+
+  app.use('/api', new require('./routes/api')(api));
   app.use('/source', new require('./routes/source')(content));
   app.use('/render', new require('./routes/render')(content, renderer));
   app.use('/nav', new require('./routes/nav')(content, renderer));

@@ -403,6 +403,10 @@ MdRender.prototype.renderPlantUmlDiagram = function(id, format) {
 }
 
 MdRender.prototype.render = function(src, relPath) {
+  return this.parseAndRender(src, relPath).html;
+}
+
+MdRender.prototype.parseAndRender = function(src, relPath) {
     var options = { 
         gfm: true,
         breaks: true,
@@ -421,12 +425,28 @@ MdRender.prototype.render = function(src, relPath) {
             }
             return { 
                 type: 'paragraph',
-                text: `![${id}](/render/uml/${id})`,
+                text: `![${id}](/render/${t.lang}/${id})`,
             };
         } else { return t; }
     });
+
+    // @donald.duck => [@donald.duck](mailto:donald.duck@calag.de)
+    let notify = [];
+    extTokens = extTokens.map(t => {
+      if (t.text) {
+        t.text = t.text.replace(/\B(\@(\w+(\.\w+)+))/, (s, display, name) => {
+          const mail = `${name}@calag.de`;
+          notify.push(mail);
+          return `[${display}](mailto:${mail})`;
+        })
+      }
+      return t;
+    });
+
     extTokens.links = tokens.links;
-    return marked.parser(extTokens, options);
+
+    const html = marked.parser(extTokens, options);
+    return { html: html, notify: notify };
 }
 
 // export the class
