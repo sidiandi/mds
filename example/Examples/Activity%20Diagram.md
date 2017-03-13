@@ -8,11 +8,9 @@ Another advantage of this new implementation is that it's done without the need 
 The new syntax will replace the old one. However, for compatibility reason, the old syntax will still be recognized, to ensure ascending compatibility.
 Users are simply encouraged to migrate to the new syntax.
 
-Simple Activity
+## Simple Activity
 Activities label starts with : and ends with ;.
-
 Text formatting can be done using creole wiki syntax.
-
 They are implicitly linked in their definition order.
 
 @startuml
@@ -21,8 +19,7 @@ They are implicitly linked in their definition order.
 several **lines**;
 @enduml
 
-basic diagram activity
-Start/Stop
+## Start/Stop
 You can use start and stop keywords to denote the beginning and the end of a diagram.
 
 @startuml
@@ -33,7 +30,6 @@ several **lines**;
 stop
 @enduml
 
-start and stop in diagram activity
 You can also use the end keyword.
 
 @startuml
@@ -44,8 +40,7 @@ several **lines**;
 end
 @enduml
 
-start and end in diagram activity
-Conditional
+## Conditional
 You can use if, then and else keywords to put tests if your diagram. Labels can be provided using parentheses.
 
 @startuml
@@ -63,7 +58,6 @@ stop
 
 @enduml
 
-if then else example
 You can use the elseif keyword to have several tests :
 
 @startuml
@@ -83,8 +77,7 @@ endif
 stop
 @enduml
 
-several if test
-Repeat loop
+## Repeat loop
 You can use repeat and repeatwhile keywords to have repeat loops.
 
 @startuml
@@ -100,8 +93,7 @@ stop
 
 @enduml
 
-basic repeat while loop
-While loop
+## While loop
 You can use while and end while keywords to have repeat loops.
 
 @startuml
@@ -117,7 +109,6 @@ stop
 
 @enduml
 
-another while loop
 It is possible to provide a label after the endwhile keyword, or using the is keyword.
 
 @startuml
@@ -127,8 +118,7 @@ endwhile (empty)
 :close file;
 @enduml
 
-while loop with labels
-Parallel processing
+## Parallel processing
 You can use fork, fork again and end fork keywords to denote parallel processing.
 
 @startuml
@@ -148,8 +138,7 @@ endif
 
 @enduml
 
-activity diagram with parallel processing
-Notes
+## Notes
 Text formatting can be done using creole wiki syntax.
 
 A note can be floating, using floating keyword.
@@ -171,8 +160,7 @@ stop
 
 @enduml
 
-add notes on activity diagram
-Colors
+## Colors
 You can use specify a color for some activities.
 
 @startuml
@@ -185,8 +173,7 @@ These files should edited at this point!;
 
 @enduml
 
-changing colors
-Arrows
+## Arrows
 Using the -> notation, you can add texts to arrow, and change their color.
 
 It's also possible to have dotted, dashed, bold or hidden arrows.
@@ -209,8 +196,7 @@ endif
 :foo5;
 @enduml
 
-colored arrows
-Grouping
+## Grouping
 You can group activity together by defining partition:
 
 @startuml
@@ -227,8 +213,7 @@ partition Running {
 stop
 @enduml
 
-grouping and partitionning in activity diagram
-Swimlanes
+## Swimlanes
 Using pipe |, you can define swimlanes.
 It's also possible to change swimlanes color.
 
@@ -238,16 +223,16 @@ start
 :foo1;
 |#AntiqueWhite|Swimlane2|
 :foo2;
+|Swimlane3|
 :foo3;
 |Swimlane1|
 :foo4;
-|Swimlane2|
+|Swimlane3|
 :foo5;
 stop
 @enduml
 
-swimlanes
-Detach
+## Detach
 It's possible to remove an arrow using the detach keyword.
 
 @startuml
@@ -269,7 +254,7 @@ It's possible to remove an arrow using the detach keyword.
  stop
 @enduml
 
-# SDL
+## SDL
 By changing the final ; separator, you can set different rendering for the activity:
 
     |
@@ -304,7 +289,7 @@ end split
 :finish;
 @enduml
 
-## Full servlet example
+## Full Servlet Example
 
 @startuml
 
