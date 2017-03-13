@@ -169,6 +169,10 @@ $(document).ready(function(){
         searchFocus();
     });
 
+    $(document).bind('keydown', 'F2', function() {
+        toggleEditMode();
+    });
+
     $('#source').keyup(function() {
         updateTempSource($('#source').val());
     });
@@ -181,6 +185,14 @@ $(document).ready(function(){
 
     $('#commit').click(function() {
         commit();
+    });
+
+    function toggleEditMode() {
+        $('edit').toggle();
+    }
+
+    $('#editMode').click(function() {
+        toggleEditMode();
     });
 
     $(window).on('unload', function() {

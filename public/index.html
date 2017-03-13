@@ -11,15 +11,21 @@
   <script src="/javascripts/index.js"></script>
 </head>
 <body>
+  <wrapper>
   <header>
     <breadCrumbs></breadCrumbs>
     <search>
       <input type="text" id="search" placeholder="Search [Ctrl+/]" />
+      <button id="editMode" title="F2" />Edit</button>
     </search>
   </header>
   <main>
   <navbar></navbar>
   <article id="article"></article>
+  </main>
+  <footer><a href="https://github.com/sidiandi/mds">MDS</a></footer>
+  </main>
+  </wrapper>
   <edit>
     <status></status>
     <div>
@@ -31,7 +37,5 @@
     <history>
     </history>
   </edit>
-  </main>
-  <footer><a href="https://github.com/sidiandi/mds">MDS</a></footer>
 </body>
 </html>

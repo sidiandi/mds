@@ -10,7 +10,7 @@ body {
 
 body {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
 }
 
 body main {
@@ -19,6 +19,12 @@ body main {
   flex: 1 1 0px;
   min-height: 0px;
   min-width: 0px;
+}
+
+wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 navbar { 
