@@ -18,24 +18,29 @@ function MdApi(content, render, nav) {
     this.nav = nav;
 }
 
-function getPath(req) {
-    if (!req) {
-        throw('req is not defined');
-    }
+const commandSearch = '#search/';
 
-    if (!(req.path)) { 
-        throw('req.path is not defined');
+function parseHash(hash) {
+    if (hash === null || hash === undefined) {
+        return { path: null, anchor: null };
     }
-
-    let path;
-    try
-    {
-        const m = /^#(\/[^#]*)/.exec(req.path);
-        path = m[1];
-        return path;
+    for (command of [commandSearch]) {
+        if (hash.startsWith(command)) {
+            return {
+                command: command, 
+                args: decodeURI(hash.substr(command.length))
+            }
+        }
     }
-    catch (e) {
-        throw('not a valid path: ' + req.path)
+    if (hash) {
+        var re = /^#([^#]+)(#([^#]+))?/;
+        var m = re.exec(hash);
+        return { 
+            path: m[1],
+            anchor: m[3],
+        }
+    } else {
+        return { path: '/', anchor: undefined }
     }
 }
 
@@ -44,33 +49,40 @@ MdApi.prototype.onReply = function(result) {
 
 MdApi.prototype.search = function(req) {
     const _this = this;
-    const source = `# Search for  ${req.search}`;
+    const parsedHash = parseHash(req.hash);
+    const pattern = parsedHash.args;
+    const source = `# Search for  ${pattern}`;
 
-    return _this.content.search(req.search)
+    return _this.content.search(pattern)
         .then((result) => {
-            return _this.render.parseAndRender(result, '/')
+            res = _this.render.parseAndRender(result, '/')
+            res.title = `Search for ${pattern}`;
+            res.hash = req.hash;
+            res.breadCrumbs = _this.render.render(this.content.getBreadcrumbs('/'));
+            return res;
         });
 }
 
 MdApi.prototype.call = function(req) {
     try
     {
-        if (req.search) {
+        const parsedHash = parseHash(req.hash);
+
+        if (parsedHash.command === commandSearch) {
             return this.search(req);
         }
 
         const api = this;
 
-        const path = getPath(req);
-        const articlePath = path.endsWith('/') ? path + '/Readme.md' : path;
-
-        let res = {
-            path: req.path,
-            title: api.content.getTitleFromRelPath(path),
-            commit: req.commit,
-        };
+        const path = parsedHash.path;
+        const articlePath = path.endsWith('/') ? path + 'Readme.md' : path;
 
         const promises = [];
+
+        promises.push(Promise.resolve({
+            hash: req.hash,
+            title: api.content.getTitleFromRelPath(path)
+        }));
 
         if (req.breadCrumbs) {
             promises.push(Promise.resolve({
@@ -116,7 +128,7 @@ MdApi.prototype.call = function(req) {
         }
 
         return Promise.all(promises).then(r => { 
-            var x = Object.assign(res, ...r);
+            var x = Object.assign(...r);
             this.onReply(x);
             return x;
         });

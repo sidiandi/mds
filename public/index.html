@@ -15,18 +15,18 @@
   <header>
     <breadCrumbs></breadCrumbs>
     <search>
-      <input type="text" id="search" placeholder="Search [Ctrl+/]" />
+      <input type="text" id="search" tabindex="1" placeholder="Search [Ctrl+/]" />
       <button id="editMode" title="F2" />Edit</button>
     </search>
   </header>
   <main>
   <navbar></navbar>
-  <article id="article"></article>
+  <article id="article" tabindex="-1"></article>
   </main>
   <footer><a href="https://github.com/sidiandi/mds">MDS</a></footer>
   </main>
   </wrapper>
-  <edit>
+  <edit style="display: none;">
     <status></status>
     <div>
       <button title="[Ctrl]+[Enter]" id="commit">Commit</button>

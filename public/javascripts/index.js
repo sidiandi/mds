@@ -2,11 +2,37 @@ var restore = undefined;
 
 $(document).ready(function(){
 
-    let currentRelPath;
+    let hash = null;
+
+    const commandSearch = '#search/';
+
+    const parseHash = function(hash) {
+        if (hash === null || hash === undefined) {
+            return { path: null, anchor: null };
+        }
+        for (command of [commandSearch]) {
+            if (hash.startsWith(command)) {
+                return {
+                    command: command, 
+                    args: decodeURI(hash.substr(command.length))
+                }
+            }
+        }
+        if (hash) {
+            var re = /^#([^#]+)(#([^#]+))?/;
+            var m = re.exec(hash);
+            return { 
+                path: m[1],
+                anchor: m[3],
+            }
+        } else {
+            return { path: '/', anchor: undefined }
+        }
+    }
 
     restore = function(commitHash) {
         api({
-            path: currentRelPath,
+            hash: hash,
             version: commitHash,
             html: true,
         }, (data) => {
@@ -31,6 +57,9 @@ $(document).ready(function(){
             complete: (response) => {
                 const data = response.responseJSON;
                 if (data) {
+                    if (data.hash) {
+                        hash = data.hash;
+                    }
                     if (data.status) {
                         showStatus(data.status);
                     }
@@ -45,11 +74,11 @@ $(document).ready(function(){
                     }
                     if (data.html) {
                         $('article').html(data.html);
+                        scrollTo(data.hash);
                     }
                     if (data.navbar) {
                         $('navbar').html(data.navbar);
                     }
-
                     if (callback) {
                         callback(data);
                     }
@@ -58,58 +87,48 @@ $(document).ready(function(){
         });
     }
 
-    function getPathFromHash(hash) {
-        if (hash === '') {
-            return '#/Readme.md';
-        }
-        return hash;
-    }
-
     function commitWithoutFeedback() {
-        api({
-            path: currentRelPath,
-            source: $('#source').val(),
-            commit: true,
-        });
-    }
-
-    function scrollToId(id) { 
-        if (id) {
-            const scrollTo = $(id);
-            const container = $('article');
-            container.animate({
-                scrollTop: scrollTo.offset().top - container.offset().top + container.scrollTop()
+        if (!(hash === null)) {
+            api({
+                hash: hash,
+                source: $('#source').val(),
+                commit: true,
             });
         }
     }
 
-    function navigateTo(hash) {
-        const hashParts = getPathFromHash(hash).split('#');
-        const path = '#' + hashParts[1];
-        let id = hashParts[2];
+    function scrollTo(hash) { 
+        const p = parseHash(hash)
+        const id = p.anchor;
         if (id) {
-            id = '#' + id;
+            const elementToScrollTo = $(id);
+            const container = $('article');
+            container.animate({
+                scrollTop: elementToScrollTo.offset().top - container.offset().top + container.scrollTop()
+            });
         }
+    }
 
-        console.log({ currentRelPath: currentRelPath, path: path });
+    function navigateTo(toHash) {
+        const to = parseHash(toHash);
+        const current = parseHash(hash);
 
-        if (currentRelPath === path) {
-            scrollToId(id);
+        if (to.path && (to.path === current.path)) {
+            hash = toHash;
+            scrollTo(hash);
         }
         else {
             commitWithoutFeedback();
 
             api({
-                path: path,
+                hash: toHash,
                 html: true,
                 breadCrumbs : true,
                 navbar: true,
                 history: true
                 // history: true
             }, (data) => {
-                currentRelPath = path;
                 $('#source').val(data.source);
-                scrollToId(id);
             });
         }
     }
@@ -131,7 +150,7 @@ $(document).ready(function(){
         const source = $('#source').val();
 
         api({
-            path: currentRelPath,
+            hash: hash,
             source: source,
             commit: true,
             html: true,
@@ -143,7 +162,7 @@ $(document).ready(function(){
 
     function updateTempSource(source) {
         api({
-            path: currentRelPath,
+            hash: hash,
             source: source,
             commit: false,
             html: true,
@@ -161,26 +180,34 @@ $(document).ready(function(){
         $('#search').select();
     }
 
-    $('#source').bind('keydown', 'ctrl+/', function() {
-        searchFocus();
-    });
+    for (e of [$('#source'), $('#search'), $(document)]) {
+        e.bind('keydown', 'ctrl+/', function() {
+            searchFocus();
+        });
 
-    $(document).bind('keydown', 'ctrl+/', function() {
-        searchFocus();
-    });
-
-    $(document).bind('keydown', 'F2', function() {
-        toggleEditMode();
-    });
+        e.bind('keydown', 'F2', function() {
+            toggleEditMode();
+        });
+    }
 
     $('#source').keyup(function() {
         updateTempSource($('#source').val());
     });
 
-    $('#search').keyup(function() {
-        api({ 
-            search: $('#search').val()
-        });
+    $('#search').bind('keydown', 'return', function() {
+        const firstA = $('article').find('a:first');
+        if (firstA) {
+            window.location.href = firstA.attr('href');
+            $('article').focus();
+        }
+    });
+
+    $('#search').keyup(function(e) {
+        if (e.which == 13) {
+            e.preventDefault();
+        } else {
+            window.location.hash = commandSearch + encodeURI($('#search').val());
+        }
     })
 
     $('#commit').click(function() {
@@ -188,7 +215,15 @@ $(document).ready(function(){
     });
 
     function toggleEditMode() {
-        $('edit').toggle();
+        if ($('edit').is(":visible")) {
+            $('edit').toggle(100, () => {
+                $('article').focus();
+            });
+        } else {
+            $('edit').toggle(100, () => {
+                $('#source').focus();
+            });
+        }
     }
 
     $('#editMode').click(function() {

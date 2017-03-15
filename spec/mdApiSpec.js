@@ -30,7 +30,7 @@ describe("mdApi, a json API for MDS, ", function() {
     });
 
     it("returns error when called with invalid path", function(done) {
-        mdApi.call({ path: '/Readme.md' })
+        mdApi.call({ hash: '/Readme.md' })
             .catch((e) => {
                 expect(e).toBeTruthy();
                 done();
@@ -39,7 +39,7 @@ describe("mdApi, a json API for MDS, ", function() {
 
     it("returns source, html ", function(done) {
         mdApi.call({
-            path: '#/hello.md', 
+            hash: '#/hello.md', 
             html: true, 
             history: true })
         .then((r) => {
@@ -52,7 +52,7 @@ describe("mdApi, a json API for MDS, ", function() {
 
     it("returns html for posted source", function(done) {
         mdApi.call({
-            path: '#/hello.md',
+            hash: '#/hello.md',
             source: '# Mars',
             html: true, 
             history: true })
@@ -66,7 +66,7 @@ describe("mdApi, a json API for MDS, ", function() {
 
     it("commits source", function(done) {
         mdApi.call({
-            path: '#/test-set.md',
+            hash: '#/test-set.md',
             source: '# Mars',
             html: true, 
             history: true,
@@ -79,6 +79,36 @@ describe("mdApi, a json API for MDS, ", function() {
         })
         .catch((e) => { expect(e).toBeFalsy(); done(); });
     });
+
+    it("parses hash correctly", function() {
+        var p = mdApi.parseHash('#/Readme.md#section1');
+        expect(p.path).toEqual('/Readme.md');
+        expect(p.anchor).toEqual('section1');
+    })
+
+    it("parses hash correctly", function() {
+        var p = mdApi.parseHash('#/Readme.md');
+        expect(p.path).toEqual('/Readme.md');
+        expect(p.anchor).toBeUndefined();
+    })
+
+    it("parses hash correctly", function() {
+        var p = mdApi.parseHash('');
+        expect(p.path).toEqual('/');
+        expect(p.anchor).toBeUndefined();
+    })
+
+    it("parses hash correctly", function() {
+        var p = mdApi.parseHash(null);
+        expect(p.path).toBeNull();
+        expect(p.anchor).toBeNull();
+    })
+
+    it("parses hash correctly", function() {
+        var p = mdApi.parseHash(undefined);
+        expect(p.path).toBeNull();
+        expect(p.anchor).toBeNull();
+    })
 });
 
 module.exports = { createTestApi: createTestApi };

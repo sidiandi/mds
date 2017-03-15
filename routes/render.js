@@ -11,7 +11,7 @@ module.exports = function(content, renderer) {
   })
   .get('/*', function(req, res, next) {
     let relPath = req.path;
-    content.get(relPath, (markDownSource) => {
+      content.get(relPath).then((markDownSource) => {
       res.type("html");
       res.send(renderer.render(markDownSource, relPath));
     });
@@ -19,10 +19,11 @@ module.exports = function(content, renderer) {
   .post('/*', function(req, res, next) {
     let relPath = req.path;
     if (req.body.commit) {
-      content.set(relPath,  req.body.content, () => { });
-    }
-      res.type("html");
-      res.send(renderer.render(req.body.content, relPath));
+        content.set(relPath, req.body.content).then(() => {
+          res.type("html");
+          res.send(renderer.render(req.body.content, relPath));
+        });
+      }
   });
 };
 

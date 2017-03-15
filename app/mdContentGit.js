@@ -49,12 +49,14 @@ MdContent.prototype.git = function(args) {
     return new Promise(function(resolve, reject) {
         execFile('git', args, { cwd: _this.contentDirectory }, (error, stdout, stderr) => {
             if (error) {
+                /*
                 console.log({
                     stderr: stderr,
                     stdout: stdout,
                     args: args,
                     error: error
                 });
+                */
                 reject(error);
             }
             else {
@@ -280,7 +282,7 @@ MdContent.prototype.withTrailingSlash = function(relPath) {
     return relPath;
 }
 
-MdContent.prototype.search = function(pattern, callback) {
+MdContent.prototype.search = function(pattern) {
     const _this = this;
     return ((pattern.length >= 3) ? (this.git(['grep', '-i', pattern])
         .then(gitOutput => {
@@ -293,7 +295,11 @@ MdContent.prototype.search = function(pattern, callback) {
                 })
                 .join(newLine);
             return gitOutput;
-        })) : Promise.resolve('Search term must have 3 or more characters.'))
+        }))
+        .catch((e) => {
+            return 'Nothing found.';
+        })
+         : Promise.resolve('Search term must have 3 or more characters.'))
         .then(md => {
             return `# Search for ${pattern}\r\n${md}`;
         });
