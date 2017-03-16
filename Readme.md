@@ -2,7 +2,7 @@
 
 Minimal Wiki server using git as backend.
 
-(c) 2017, sidiandi
+(c) 2017, [sidiandi](https://github.com/sidiandi).
 
 ## Features
 - Supports git as content store
