@@ -5,10 +5,12 @@ Minimal Wiki server using git as backend.
 (c) 2017, [sidiandi](https://github.com/sidiandi).
 
 ## Installation
-
+```bash
+$ npm install mds
+```
 
 ## Features
-- Supports git as content store
+- Supported content store backends: git
 - renders PlantUML graphics
 - optimized for keyboard use
 
