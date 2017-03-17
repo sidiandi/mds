@@ -16,10 +16,9 @@ $ npm install mds
 
 ## Todo
 
-* directory view: icons for directories and files
 * directory view: leave .extensions on non-markdown files
-* edit: undo button
 * commit when leaving page: give status message
+* directory view: icons for directories and files
 * drop images/files/urls onto text editor
 * delete files
 * recent changes
@@ -45,6 +44,7 @@ $ npm install mds
 * hitting enter in the search field navigates to the first search result
 * configuration over json file
 * auto-commit when leaving page
+* edit: undo button
 
 ## Directory Handling
 
