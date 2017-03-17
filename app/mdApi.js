@@ -92,7 +92,7 @@ MdApi.prototype.call = function(req) {
 
         let doCommit;
         if (req.commit) {
-            doCommit = api.content.set(articlePath, req.source)
+            doCommit = api.content.set(articlePath, req.newSource)
             .then((r) => { return { commit: true, status: `${articlePath} committed.` }; });
         } else {
             doCommit = Promise.resolve({ commit : false });
@@ -100,14 +100,16 @@ MdApi.prototype.call = function(req) {
         promises.push(doCommit);
 
         let getSource;
-        if ('source' in req) {
-            getSource = Promise.resolve(req.source);
+        if ('newSource' in req) {
+            getSource = Promise.resolve(req.newSource);
         }
         else {
             getSource = api.content.get(articlePath, req.version);
         }
         getSource = getSource.then(function(s) { return { source: s }; });
-        promises.push(getSource);
+        if (req.source) {
+            promises.push(getSource);
+        }
 
         if (req.navbar) {
             promises.push(api.nav.get(path)

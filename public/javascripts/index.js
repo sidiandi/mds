@@ -3,6 +3,8 @@ var restore = undefined;
 $(document).ready(function(){
 
     let hash = null;
+    let sourceChanges = 0;
+    let source = '';
 
     const commandSearch = '#search/';
 
@@ -34,18 +36,19 @@ $(document).ready(function(){
         api({
             hash: hash,
             version: commitHash,
+            source: true,
             html: true,
-        }, (data) => {
-            $('#source').val(data.source);
         });
     }
 
     function showStatus(text) {
-        const s = $('status');
-        s.html(text);
-        s.slideDown('fast', function(){
-          window.setTimeout(function(){ s.slideUp()}, 5000);
-        });
+        if (text) {
+            const s = $('status');
+            s.html(text);
+            s.slideDown('fast', function(){
+                window.setTimeout(function(){ s.slideUp()}, 3000);
+            });
+        }
     }
 
     function api(req, callback) {
@@ -79,6 +82,13 @@ $(document).ready(function(){
                     if (data.navbar) {
                         $('navbar').html(data.navbar);
                     }
+                    if (data.source) {
+                        if (data.source) {
+                            sourceChanges = 0;
+                            $('#source').val(data.source);
+                            $('#sourceChanges').html(sourceChanges);
+                        }
+                    }
                     if (callback) {
                         callback(data);
                     }
@@ -88,10 +98,10 @@ $(document).ready(function(){
     }
 
     function commitWithoutFeedback() {
-        if (!(hash === null)) {
+        if (sourceChanges > 0 && !(hash === null)) {
             api({
                 hash: hash,
-                source: $('#source').val(),
+                newSource: $('#source').val(),
                 commit: true,
             });
         }
@@ -123,12 +133,11 @@ $(document).ready(function(){
             api({
                 hash: toHash,
                 html: true,
+                source: true,
                 breadCrumbs : true,
                 navbar: true,
                 history: true
                 // history: true
-            }, (data) => {
-                $('#source').val(data.source);
             });
         }
     }
@@ -143,36 +152,49 @@ $(document).ready(function(){
         navigateTo(window.location.hash);
     };
 
-    function setSource(source) {
-    }
-
     function commit() {
         const source = $('#source').val();
 
         api({
             hash: hash,
-            source: source,
+            newSource: source,
             commit: true,
             html: true,
             history: true,
             navbar: true,
         }, (data) => {
+            sourceChanges = 0;
+            $('#sourceChanges').html(sourceChanges);
         });
     }
 
-    function updateTempSource(source) {
+    function undo() {
         api({
             hash: hash,
-            source: source,
             commit: false,
             html: true,
-        }, (data) => {
+            source: true,
+            history: true,
+            navbar: true,
+        });
+    }
+
+    function preview(source) {
+        api({
+            hash: hash,
+            newSource: source,
+            commit: false,
+            html: true,
         });
     }
 
     // Binding keys
     $('#source').bind('keydown', 'ctrl+return', function() {
         commit();
+    });
+
+    $('#source').bind('keydown', 'ctrl+z', function() {
+        undo();
     });
 
     function searchFocus() {
@@ -190,10 +212,12 @@ $(document).ready(function(){
         });
     }
 
-    $('#source').keyup(function() {
-        updateTempSource($('#source').val());
-    });
-
+    $('#source')[0].addEventListener('input', function() {
+        preview($('#source').val());
+        ++sourceChanges;
+        $('#sourceChanges').html(sourceChanges);
+      }, false);
+    
     $('#search').bind('keydown', 'return', function() {
         const firstA = $('article').find('a:first');
         if (firstA) {
@@ -202,16 +226,20 @@ $(document).ready(function(){
         }
     });
 
-    $('#search').keyup(function(e) {
+    $('#search')[0].addEventListener('input', function() {
         if (e.which == 13) {
             e.preventDefault();
         } else {
             window.location.hash = commandSearch + encodeURI($('#search').val());
         }
-    })
+    }, false);
 
     $('#commit').click(function() {
         commit();
+    });
+
+    $('#undo').click(function() {
+        undo();
     });
 
     function toggleEditMode() {
@@ -232,6 +260,29 @@ $(document).ready(function(){
 
     $(window).on('unload', function() {
         commitWithoutFeedback();
+    });
+
+    $("article").on(
+        'dragover',
+        function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    )
+
+    $("article").on(
+        'dragenter',
+        function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    )
+
+    $("article").on('drop', (ev) => {
+        ev.preventDefault();  
+        ev.stopPropagation();
+        var data = ev.originalEvent.dataTransfer.getData("text");
+        alert(data);
     });
     
     window.onhashchange();

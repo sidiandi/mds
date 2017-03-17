@@ -27,56 +27,61 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const content = new MdContent('C:\\work\\mds-test-content');
-content.init().then(() => {
-  const renderer = new MdRender();
-  const api = new MdApi(content, renderer, new MdNav(content, renderer));
+app.init = function(options) {
+
+  app.set('mdsOptions', options);
+  app.set('port', options.port);
+
+  const content = new MdContent(options.contentDirectory);
+  return content.init().then(() => {
+    const renderer = new MdRender();
+    const api = new MdApi(content, renderer, new MdNav(content, renderer));
   
-  api.onReply = function(result) {
-    if (result.commit) {
-      for (mail of result.notify) {
-        transporter.sendMail({
-          from: 'andreas.grimme@gmx.net',
-          to: mail,
-          subject: `${result.path} has changed`,
-          text: result.source,
-          html: result.html
-        })
-        .then((r) => {
-          console.log(r);
-        })
-        .catch(e => {
-          console.log(e);
-        });
+    api.onReply = function(result) {
+      if (result.commit) {
+        for (mail of result.notify) {
+          transporter.sendMail({
+            from: 'andreas.grimme@gmx.net',
+            to: mail,
+            subject: `${result.path} has changed`,
+            text: result.source,
+            html: result.html
+          })
+          .then((r) => {
+            console.log(r);
+          })
+          .catch(e => {
+            console.log(e);
+          });
+        }
       }
-    }
-  };
+    };
 
-  app.use('/api', new require('./routes/api')(api));
-  app.use('/source', new require('./routes/source')(content));
-  app.use('/render', new require('./routes/render')(content, renderer));
-  app.use('/nav', new require('./routes/nav')(content, renderer));
-  app.use('/breadCrumbs', new require('./routes/breadCrumbs')(content, renderer));
-  app.use('/history', new require('./routes/history')(content, renderer));
-  //app.static('/', './public');
+    app.use('/api', new require('./routes/api')(api));
+    app.use('/source', new require('./routes/source')(content));
+    app.use('/render', new require('./routes/render')(content, renderer));
+    app.use('/nav', new require('./routes/nav')(content, renderer));
+    app.use('/breadCrumbs', new require('./routes/breadCrumbs')(content, renderer));
+    app.use('/history', new require('./routes/history')(content, renderer));
 
-  // catch 404 and forward to error handler
-  app.use(function(req, res, next) {
-    var err = new Error('Not Found');
-    err.status = 404;
-    next(err);
+    // catch 404 and forward to error handler
+    app.use(function(req, res, next) {
+      var err = new Error('Not Found');
+      err.status = 404;
+      next(err);
+    });
+
+    // error handler
+    app.use(function(err, req, res, next) {
+      // set locals, only providing error in development
+      res.locals.message = err.message;
+      res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+      // render the error page
+      res.status(err.status || 500);
+      res.render('error');
+    });
   });
-
-  // error handler
-  app.use(function(err, req, res, next) {
-    // set locals, only providing error in development
-    res.locals.message = err.message;
-    res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-    // render the error page
-    res.status(err.status || 500);
-    res.render('error');
-  });
-});
+}
 
 module.exports = app;

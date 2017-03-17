@@ -4,31 +4,112 @@
  * Module dependencies.
  */
 
+var fs = require('fs-extra');
+var path = require("path");
 var app = require('../app');
+var defaultOptions = require('../app/mds-options.js');
 var debug = require('debug')('myexpressapp:server');
 var http = require('http');
+var argv = require('minimist')(process.argv.slice(2));
+const opn = require('opn');
+
+if (argv.h || argv.help) {
+  console.log(`[MDS](https://github.com/sidiandi/mds)
+  -h, --help: show this message
+  --init: generate a config file 'mds-options.js'
+  `);
+  process.exit(0);
+}
+
+if (argv.init) {
+  fs.copySync(__dirname + '/../app/mds-options.js', './mds-options.js');
+  process.exit(0);
+}
 
 /**
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
+let options = Object.assign(defaultOptions);
+console.log(options);
 
-/**
- * Create HTTP server.
- */
+for (optionsFile of argv._)
+{
+  try
+  {
+    optionsFile = path.resolve(optionsFile);
+    let userProvidedOptions = require(optionsFile);
+    options = Object.assign(options, userProvidedOptions);
+  } catch (e) {
+    console.log(e);
+    console.log(`Error in user provided options ${optionsFile}.`);
+    process.exit(1);
+  }
+}
 
-var server = http.createServer(app);
+console.log(options);
 
-/**
- * Listen on provided port, on all network interfaces.
- */
+app.init(options).then(() => {
 
-console.log(`Listen on port ${port}`);
-server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
+  /**
+   * Create HTTP server.
+   */
+
+  var server = http.createServer(app);
+  const port = options.port;
+
+  /**
+   * Event listener for HTTP server "error" event.
+   */
+
+  function onError(error) {
+    if (error.syscall !== 'listen') {
+      throw error;
+    }
+
+    var bind = typeof port === 'string'
+      ? 'Pipe ' + port
+      : 'Port ' + port;
+
+    // handle specific listen errors with friendly messages
+    switch (error.code) {
+      case 'EACCES':
+        console.error(bind + ' requires elevated privileges');
+        process.exit(1);
+        break;
+      case 'EADDRINUSE':
+        console.error(bind + ' is already in use');
+        process.exit(1);
+        break;
+      default:
+        throw error;
+    }
+  }
+
+  /**
+   * Event listener for HTTP server "listening" event.
+   */
+
+  function onListening() {
+    var addr = server.address();
+    var bind = typeof addr === 'string'
+      ? 'pipe ' + addr
+      : 'port ' + addr.port;
+    debug('Listening on ' + bind);
+  }
+
+  /**
+   * Listen on provided port, on all network interfaces.
+   */
+
+  server.on('error', onError);
+  server.on('listening', onListening);
+  server.listen(options.port);
+  console.log(`Listen on port ${options.port}`);
+  if (options.openInBrowser) {
+    opn(`http://localhost:${options.port}`);
+  }
+});
 
 /**
  * Normalize a port into a number, string, or false.
@@ -50,42 +131,3 @@ function normalizePort(val) {
   return false;
 }
 
-/**
- * Event listener for HTTP server "error" event.
- */
-
-function onError(error) {
-  if (error.syscall !== 'listen') {
-    throw error;
-  }
-
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
-
-  // handle specific listen errors with friendly messages
-  switch (error.code) {
-    case 'EACCES':
-      console.error(bind + ' requires elevated privileges');
-      process.exit(1);
-      break;
-    case 'EADDRINUSE':
-      console.error(bind + ' is already in use');
-      process.exit(1);
-      break;
-    default:
-      throw error;
-  }
-}
-
-/**
- * Event listener for HTTP server "listening" event.
- */
-
-function onListening() {
-  var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
-  debug('Listening on ' + bind);
-}

@@ -203,7 +203,12 @@ MdContent.prototype.getTitleFromRelPath = function(fn) {
     if (fn === '/') {
         return "Home";
     };
-    return decodeURIComponent(path.parse(fn).name);
+    const p = path.parse(fn);
+    if (p.ext === ".md") {
+        return decodeURIComponent(p.name);
+    } else {
+        return p.file;
+    }
 }
 
 MdContent.prototype.getMdLink = function(relPath) {
