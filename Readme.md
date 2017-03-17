@@ -11,7 +11,6 @@ Minimal Wiki server using git as backend.
 
 ## Todo
 
-* configuration over json file
 * drop images/files/urls onto text editor
 * delete files
 * recent changes
@@ -36,6 +35,7 @@ Minimal Wiki server using git as backend.
 * search in text
 * toggle edit mode
 * hitting enter in the search field navigates to the first search result
+* configuration over json file
 
 ## Directory Handling
 
