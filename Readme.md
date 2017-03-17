@@ -11,6 +11,8 @@ Minimal Wiki server using git as backend.
 
 ## Todo
 
+* directory view: icons for directories and files
+* directory view: leave .extensions on non-markdown files
 * drop images/files/urls onto text editor
 * delete files
 * recent changes
