@@ -14,6 +14,7 @@ Minimal Wiki server using git as backend.
 * directory view: icons for directories and files
 * directory view: leave .extensions on non-markdown files
 * edit: undo button
+* commit when leaving page: give status message
 * drop images/files/urls onto text editor
 * delete files
 * recent changes
