@@ -16,7 +16,7 @@ $ npm install mds
 
 ## Todo
 
-* auto-commit when leaving page
+* auto-commit when leaving page 
 * directory view: icons for directories and files
 * directory view: leave .extensions on non-markdown files
 * edit: undo button
