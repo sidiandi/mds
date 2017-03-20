@@ -16,6 +16,7 @@ $ npm install mds
 
 ## Todo
 
+* proper view if other files
 * directory view: icons for directories and files
 * drop images/files/urls onto text editor
 * delete files
