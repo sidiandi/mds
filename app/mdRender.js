@@ -389,7 +389,7 @@ MdRender.prototype.renderPlantUmlDiagram = function(id, format) {
     } else {
         try {
             let gen = plantuml.generate({format: format});
-            console.log(d.source);
+            // console.log(d.source);
             let s = new stream.Readable();
             s._read = function noop() {}; // redundant? see update below
             s.push(d.source);

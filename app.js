@@ -9,9 +9,8 @@ const MdRender = require('./app/mdRender');
 const MdApi = require('./app/mdApi');
 const MdNav = require('./app/mdNav');
 const nodemailer = require('nodemailer');
-const mailOptions = require('c:\\temp\\mailOptions.js');
 
-const transporter = nodemailer.createTransport(mailOptions.get());
+let transporter;
 
 var app = express();
 
@@ -36,12 +35,15 @@ app.init = function(options) {
   return content.init().then(() => {
     const renderer = new MdRender();
     const api = new MdApi(content, renderer, new MdNav(content, renderer));
+
+  if (options.mailer) {
+    transporter = nodemailer.createTransport(mailOptions.get());
   
     api.onReply = function(result) {
       if (result.commit) {
         for (mail of result.notify) {
           transporter.sendMail({
-            from: 'andreas.grimme@gmx.net',
+            from: options.mailFrom,
             to: mail,
             subject: `${result.path} has changed`,
             text: result.source,
@@ -56,6 +58,7 @@ app.init = function(options) {
         }
       }
     };
+  }
 
     app.use('/api', new require('./routes/api')(api));
     app.use('/source', new require('./routes/source')(content));

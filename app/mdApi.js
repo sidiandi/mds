@@ -75,7 +75,8 @@ MdApi.prototype.call = function(req) {
         const api = this;
 
         const path = parsedHash.path;
-        const articlePath = path.endsWith('/') ? path + 'Readme.md' : path;
+        const isDirectory = path.endsWith('/');
+        const articlePath = isDirectory ? path + 'Readme.md' : path;
 
         const promises = [];
 
@@ -117,9 +118,10 @@ MdApi.prototype.call = function(req) {
         }
         
         if (req.html) {
-            promises.push(getSource.then((r) => {
-                return api.render.parseAndRender(r.source, articlePath);
-            }));
+            promises.push(getSource
+                .then((r) => {
+                    return api.render.parseAndRender(r.source, articlePath)
+                }));
         }
 
         if (req.history) {

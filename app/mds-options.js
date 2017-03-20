@@ -10,8 +10,8 @@ module.exports = {
     // opens the wiki in the local web browser on start
     openInBrowser: false,
 
-    // [NodeMailer](https://nodemailer.com/about/) configuration. Uncomment if MDS should sent change notifications by mail.
     /*
+    // [NodeMailer](https://nodemailer.com/about/) configuration. Uncomment if MDS should sent change notifications by mail.
     mailer: {
         service: 'Gmail',
         auth: {
@@ -20,6 +20,9 @@ module.exports = {
         },
         tls: { rejectUnauthorized: false }
     }
+
+    // sender address for mail.
+    mailFrom = 'your.name@gmail.com'
     */
 }
 

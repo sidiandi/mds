@@ -88,11 +88,25 @@ MdContent.prototype.getDirectoryAsMarkdown = function(path) {
     const children = ls(fsPath  + '*');
 
     return Promise.resolve(children
-        .filter((i) => { return !(i.name === '.git')})
+        .filter((i) => {
+            return !(i.name === '.git')})
+        .sort((a,b) => {
+            const da = a.stat.isDirectory();
+            const db = b.stat.isDirectory();
+            if (da == db) {
+                return a.name.localeCompare(b.name);
+            } else {
+                if (da > db) {
+                    return -1;
+                } else {
+                    return +1;
+                }
+            }
+        })
         .reduce((s, i) => {
                 const dirPostFix = (i.stat.isDirectory() ? '/' : '');
-                c = path + i.file + dirPostFix
-                return s + `* [${_this.getTitleFromRelPath(c)}](${c})${newLine}`;
+                c = path + i.file + dirPostFix;
+                return s + `* [${_this.getTitleFromRelPath(c) + dirPostFix}](${c})${newLine}`;
         }, ''));
 }
 
@@ -207,7 +221,7 @@ MdContent.prototype.getTitleFromRelPath = function(fn) {
     if (p.ext === ".md") {
         return decodeURIComponent(p.name);
     } else {
-        return p.file;
+        return p.base;
     }
 }
 
