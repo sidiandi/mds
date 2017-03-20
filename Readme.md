@@ -16,7 +16,8 @@ $ npm install mds
 
 ## Todo
 
-* proper view if other files
+* Directory editing
+* proper display of files with other extension than .md
 * directory view: icons for directories and files
 * drop images/files/urls onto text editor
 * delete files
