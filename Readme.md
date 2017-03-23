@@ -1,6 +1,5 @@
 # MDS - MarkDownServer
 
-
 Minimal Wiki server using git as backend.
 
 (c) 2017, [sidiandi](https://github.com/sidiandi).
