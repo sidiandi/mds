@@ -16,7 +16,6 @@ $ npm install mds
 
 ## Todo
 
-* position cursor to beginning of text in edit area
 * Angular
 * Resizable edit area
 * Directory editing (delete files, rename files)
