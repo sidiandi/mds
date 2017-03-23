@@ -51,7 +51,7 @@ $ npm install mds
 * search in whole file, not line-by-line
 * editMode variable
 * fix crlf warning when committing to git
-* sluggish editing
+* sluggish editing: preview is updated only every 1000ms now. That's sufficient.
 
 ## Directory Handling
 
