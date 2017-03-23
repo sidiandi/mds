@@ -16,11 +16,12 @@ $ npm install mds
 
 ## Todo
 
-* Directory editing
+* Angular
+* Resizable edit area
+* Directory editing (delete files, rename files)
 * proper display of files with other extension than .md
 * directory view: icons for directories and files
 * drop images/files/urls onto text editor
-* delete files
 * recent changes
 * commit message
 * numstat diff in history
