@@ -1,5 +1,6 @@
 // Default options for [MDS](https://github.com/sidiandi/mds)
 
+
 module.exports = {
     // The port to be used by the web server
     // port: 3000,
