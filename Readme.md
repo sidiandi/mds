@@ -16,6 +16,7 @@ $ npm install mds
 
 ## Todo
 
+* sluggish editing
 * Angular
 * Resizable edit area
 * Directory editing (delete files, rename files)
@@ -50,6 +51,7 @@ $ npm install mds
 * commit when leaving page: give status messages
 * search in whole file, not line-by-line
 * editMode variable
+* fix crlf warning when committing to git
 
 ## Directory Handling
 
