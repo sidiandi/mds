@@ -17,7 +17,6 @@ $ npm install mds
 ## Todo
 
 * Angular
-
 * Resizable edit area
 * Directory editing (delete files, rename files)
 * proper display of files with other extension than .md
