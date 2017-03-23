@@ -16,6 +16,7 @@ $ npm install mds
 
 ## Todo
 
+* search in whole file, not line-by-line
 * Angular
 * Resizable edit area
 * Directory editing (delete files, rename files)
