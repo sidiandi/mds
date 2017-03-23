@@ -16,7 +16,6 @@ $ npm install mds
 
 ## Todo
 
-* editMode variable
 * position cursor to beginning of text in edit area
 * Angular
 * Resizable edit area
@@ -51,6 +50,7 @@ $ npm install mds
 * directory view: leave .extensions on non-markdown files
 * commit when leaving page: give status messages
 * search in whole file, not line-by-line
+* editMode variable
 
 ## Directory Handling
 
