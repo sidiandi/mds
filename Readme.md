@@ -17,6 +17,7 @@ $ npm install mds
 ## Todo
 
 * Resizable edit area
+* fix scrolling when clicking on TOC entries.
 * Directory editing (delete files, rename files)
 * proper display of files with other extension than .md
 * directory view: icons for directories and files
