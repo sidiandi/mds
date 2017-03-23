@@ -1,93 +1,73 @@
+# MDS - MarkDownServer
+
+Minimal Wiki server using git as backend.
+
+(c) 2017, [sidiandi](https://github.com/sidiandi).
+
+## Installation
+```bash
+$ npm install mds
 ```
-var express = require('express');
-var path = require('path');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
-const MdContent = require('./app/mdContentGit');
-const MdRender = require('./app/mdRender');
-const MdApi = require('./app/mdApi');
-const MdNav = require('./app/mdNav');
-const nodemailer = require('nodemailer');
 
-let transporter;
+## Features
+- Supported content store backends: git
+- renders PlantUML graphics
+- optimized for keyboard use
 
-var app = express();
+## Todo
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+* proper display of files with other extension than .md
+* Resizable edit area
+* fix scrolling when clicking on TOC entries.
+* Directory editing (delete files, rename files)
+* directory view: icons for directories and files
+* drop images/files/urls onto text editor
+* recent changes
+* commit message
+* numstat diff in history
+* fix textarea size on Chrome
+* search in file names
+* simple authentication
+* Angular
 
-// uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-app.use(logger('dev'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+## Done
 
-app.init = function(options) {
+* keyboard shortcut for commit (Ctrl+Enter)
+* status message
+* empty commit message 
+* navigation bar shows headings
+* navigation bar shows parent directory entries
+* CSS style for navbar
+* set HTML title correctly
+* automatically send mail to email adresses and `@name` mentions when page is committed.
+* search field in header
+* search in text
+* toggle edit mode
+* hitting enter in the search field navigates to the first search result
+* configuration over json file
+* auto-commit when leaving page
+* edit: undo button
+* directory view: leave .extensions on non-markdown files
+* commit when leaving page: give status messages
+* search in whole file, not line-by-line
+* editMode variable
+* fix crlf warning when committing to git
+* sluggish editing: preview is updated only every 1000ms now. That's sufficient.
 
-  app.set('mdsOptions', options);
-  app.set('port', options.port);
+## Directory Handling
 
-  const content = new MdContent(options.contentDirectory);
-  return content.init().then(() => {
-    const renderer = new MdRender();
-    const api = new MdApi(content, renderer, new MdNav(content, renderer));
+### Path ends with /
+* The article area shows the Readme.md file of this directory or the directory content
+* The nav area shows the directory content and the toc of the readme.md file
 
-  if (options.mailer) {
-    transporter = nodemailer.createTransport(mailOptions.get());
-  
-    api.onReply = function(result) {
-      if (result.commit) {
-        for (mail of result.notify) {
-          transporter.sendMail({
-            from: options.mailFrom,
-            to: mail,
-            subject: `${result.path} has changed`,
-            text: result.source,
-            html: result.html
-          })
-          .then((r) => {
-            console.log(r);
-          })
-          .catch(e => {
-            console.log(e);
-          });
-        }
-      }
-    };
-  }
+### Path does not end with /
+* path is interpreted as a file
+* article area shows the file contents or a 'file is empty' message
+* the nav area shows the directory contents of the parent directory and the toc of the file 
 
-    app.use('/api', new require('./routes/api')(api));
-    app.use('/source', new require('./routes/source')(content));
-    app.use('/render', new require('./routes/render')(content, renderer));
-    app.use('/nav', new require('./routes/nav')(content, renderer));
-    app.use('/breadCrumbs', new require('./routes/breadCrumbs')(content, renderer));
-    app.use('/history', new require('./routes/history')(content, renderer));
+### Path is `''`
+* Handle like if path is `/`
 
-    // catch 404 and forward to error handler
-    app.use(function(req, res, next) {
-      var err = new Error('Not Found');
-      err.status = 404;
-      next(err);
-    });
+## Navigation Bar
 
-    // error handler
-    app.use(function(err, req, res, next) {
-      // set locals, only providing error in development
-      res.locals.message = err.message;
-      res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-      // render the error page
-      res.status(err.status || 500);
-      res.render('error');
-    });
-  });
-}
-
-module.exports = app;
-
-```
