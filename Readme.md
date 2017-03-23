@@ -16,7 +16,7 @@ $ npm install mds
 
 ## Todo
 
-* sluggish editing
+* sluggish editing.
 * Angular
 * Resizable edit area
 * Directory editing (delete files, rename files)
