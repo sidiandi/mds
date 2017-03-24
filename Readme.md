@@ -19,7 +19,6 @@ $ npm install mds
 * Resizable edit area
 * fix scrolling when clicking on TOC entries.
 * Directory editing (delete files, rename files)
-* proper display of files with other extension than .md
 * directory view: icons for directories and files
 * drop images/files/urls onto text editor
 * recent changes
@@ -53,6 +52,7 @@ $ npm install mds
 * editMode variable
 * fix crlf warning when committing to git
 * sluggish editing: preview is updated only every 1000ms now. That's sufficient.
+* proper display of files with other extension than .md
 
 ## Directory Handling
 
