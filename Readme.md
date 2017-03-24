@@ -16,7 +16,6 @@ $ npm install mds
 
 ## Todo
 
-* Navbar behaviour
 * Resizable edit area
 * fix scrolling when clicking on TOC entries.
 * Directory editing (delete files, rename files)
@@ -54,6 +53,7 @@ $ npm install mds
 * fix crlf warning when committing to git
 * sluggish editing: preview is updated only every 1000ms now. That's sufficient.
 * proper display of files with other extension than .md
+* Navbar behaviour
 
 ## Directory Handling
 
