@@ -2,4 +2,4 @@
 
 ![Developers](Developers.jpg)
 
-(Link to image)[Developers.jpg]
+[Link to image](Developers.jpg)
