@@ -16,6 +16,7 @@ $ npm install mds
 
 ## Todo
 
+* Navbar behaviour
 * Resizable edit area
 * fix scrolling when clicking on TOC entries.
 * Directory editing (delete files, rename files)
