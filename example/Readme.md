@@ -8,6 +8,16 @@ The content in this directory demonstrate the capabilities of MDS.
 
 [Binary File](binary)
 
+## Source Code
+
+~~~~
+console.log("Hello, World!");
+~~~~
+
+```js
+console.log("Hello, World!");
+```
+
 ## UML Diagrams
 
 [[Activity Diagram]]
