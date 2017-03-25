@@ -16,7 +16,6 @@ $ npm install mds
 
 ## Todo
 
-* support the display of more file types: images
 * support the display of more file types: binary files (hex dump)
 * Resizable edit area
 * fix scrolling when clicking on TOC entries.
@@ -56,6 +55,7 @@ $ npm install mds
 * sluggish editing: preview is updated only every 1000ms now. That's sufficient.
 * proper display of files with other extension than .md
 * Navbar behaviour
+* support the display of more file types: images
 
 ## Directory Handling
 
