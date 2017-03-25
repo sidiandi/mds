@@ -18,7 +18,6 @@ See the [[Example/]] section for feature demos.
 
 ## Todo
 
-* Resizable edit area: use https://www.golden-layout.com/ ?
 * fix scrolling when clicking on TOC entries.
 * Directory editing (delete files, rename files)
 * directory view: icons for directories and files
@@ -30,6 +29,7 @@ See the [[Example/]] section for feature demos.
 * search in file names
 * simple authentication
 * Angular
+* use https://www.golden-layout.com/ ?
 
 ## Done
 
