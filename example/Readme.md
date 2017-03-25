@@ -2,7 +2,15 @@
 
 The content in this directory demonstrate the capabilities of MDS.
 
-[[Sandbox]]
+## Links
+
+https://www.google.com
+
+[google](https://www.google.com)
+
+Wiki-style link to [[Another Article]]
+
+## Display of Other Files
 
 [[Images]]
 
