@@ -16,7 +16,6 @@ $ npm install mds
 
 ## Todo
 
-* support the display of more file types: binary files (hex dump)
 * Resizable edit area
 * fix scrolling when clicking on TOC entries.
 * Directory editing (delete files, rename files)
@@ -56,6 +55,7 @@ $ npm install mds
 * proper display of files with other extension than .md
 * Navbar behaviour
 * support the display of more file types: images
+* support the display of more file types: binary files (hex dump)
 
 ## Directory Handling
 
