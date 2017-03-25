@@ -22,7 +22,7 @@ const commandSearch = '#search/';
 
 function parseHash(hash) {
     if (hash === null || hash === undefined) {
-        return { path: null, anchor: null };
+        return { path: '/', anchor: null };
     }
     for (command of [commandSearch]) {
         if (hash.startsWith(command)) {
@@ -135,10 +135,15 @@ MdApi.prototype.call = function(req) {
             var x = Object.assign(...r);
             this.onReply(x);
             return x;
+        })
+        .catch((err) => {
+            console.log(err);
+            return { status: err };
         });
+
     } catch(ex) {
         console.log(ex);
-        return Promise.reject(ex);
+        return { status: ex };
     }
 }
 

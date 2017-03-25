@@ -1,3 +1,17 @@
+// Start the main app logic.
+requirejs([
+    'jquery',
+    "jquery-throttle-debounce",
+    "jquery-ui",
+    "jquery.hotkeys"
+    ],
+function(
+    jQuery,
+    throttle,
+    jQueryUi,
+    jqueryHotkeys
+) {
+
 var restore = undefined;
 
 $(document).ready(function(){
@@ -5,6 +19,7 @@ $(document).ready(function(){
     let hash = null;
     let sourceChanges = 0;
     let source = '';
+    let editMode = false;
 
     const commandSearch = '#search/';
 
@@ -212,11 +227,13 @@ $(document).ready(function(){
         });
     }
 
-    $('#source')[0].addEventListener('input', function() {
+    function doPreview() {
         preview($('#source').val());
         ++sourceChanges;
         $('#sourceChanges').html(sourceChanges);
-      }, false);
+    }
+
+    $('#source')[0].addEventListener('input', $.debounce(50, $.throttle(1000, doPreview)), false);
     
     $('#search').bind('keydown', 'return', function() {
         const firstA = $('article').find('a:first');
@@ -243,13 +260,15 @@ $(document).ready(function(){
     });
 
     function toggleEditMode() {
-        if ($('edit').is(":visible")) {
+        if (editMode) {
             $('edit').toggle(100, () => {
                 $('article').focus();
+                editMode = false;
             });
         } else {
             $('edit').toggle(100, () => {
                 $('#source').focus();
+                editMode = true;
             });
         }
     }
@@ -288,3 +307,6 @@ $(document).ready(function(){
     window.onhashchange();
 
 });
+
+});
+

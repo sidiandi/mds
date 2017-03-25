@@ -34,11 +34,10 @@ MdNav.prototype.getTableOfContents = function(path) {
 MdNav.prototype.get = function(path) {
     const _this = this;
     const getToc = _this.getTableOfContents(path);
-    const parent = _this.content.getParent(path);
-    const getParentDir = parent ? _this.content.getDirectoryAsMarkdown(parent) : Promise.resolve(undefined);
-    const getDir = _this.content.getDirectoryAsMarkdown(path);
+    const dir = path.endsWith('/') ? path : _this.content.getParent(path);
+    const getDir = _this.content.getDirectoryAsMarkdown(dir);
 
-    return Promise.all([getParentDir, getDir, getToc]).then((a) => {
+    return Promise.all([getDir, getToc]).then((a) => {
         return a.filter(i => i).join('\n----\n');
     });
 }

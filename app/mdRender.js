@@ -5,6 +5,8 @@ const marked = require('marked');
 const url = require('url');
 const md5 = require('md5');
 
+const mdExtension = '.md';
+
 plantuml.useNailgun();
 
 var wikiLinks = /\[\[([^\[]+)\]\]/g;
@@ -14,7 +16,8 @@ function wikiLinkToMdLink(wikiLink) {
   var m = wikiLinks.exec(wikiLink);
   let text = m[1];
   let link = text.split('/').map(encodeURIComponent).join('/');
-  return "[" + text + "](" + (link + ".md") + ")";
+  if (!link.endsWith('/')) { link = link + mdExtension; }
+  return `[${text}](${link})`;
 }
 
 marked.InlineLexer.prototype.origOutput = marked.InlineLexer.prototype.output;
@@ -28,6 +31,19 @@ marked.Renderer.prototype.link = function(href, title, text) {
   href = this.options.mdRender.getHashedHref(href, this.options.contentPath);
   return this.origLink(href, title, text);
 }
+
+
+marked.Renderer.prototype.image = function(href, title, text) {
+  href = this.options.mdRender.getSourceHref(href, this.options.contentPath);
+  var out = `<a href="${href}"><img src="${href}" alt="${text}"`;
+  if (title) {
+    out += ' title="' + title + '"';
+  }
+  out += this.options.xhtml ? '/></a>' : '></a>';
+  return out;
+};
+
+
 
     marked.Lexer.prototype.token = function(src, top, bq) {
 
@@ -366,7 +382,7 @@ function canonic(x) {
 
 MdRender.prototype.getHashedHref = function (href, contentPath) {
     let u = url.parse(href);
-    if (u.host) {
+    if (u.host || href.startsWith('/render/') || href.startsWith('/source/')) {
         return href;
     }
     if (href.startsWith('/')) {
@@ -378,6 +394,22 @@ MdRender.prototype.getHashedHref = function (href, contentPath) {
     p = p.concat(u.path.split('/'));
     p = canonic(p);
     return '/#' + p.join('/');
+}
+
+MdRender.prototype.getSourceHref = function (href, contentPath) {
+    let u = url.parse(href);
+    if (u.host || href.startsWith('/render/') || href.startsWith('/source/')) {
+        return href;
+    }
+    if (href.startsWith('/')) {
+        return '/source' + href;
+    }
+    
+    let p = contentPath.split('/');
+    p.pop();
+    p = p.concat(u.path.split('/'));
+    p = canonic(p);
+    return '/source' + p.join('/');
 }
 
 MdRender.prototype.renderPlantUmlDiagram = function(id, format) {

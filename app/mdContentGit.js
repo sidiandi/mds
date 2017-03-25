@@ -9,16 +9,22 @@ const touch = promisify(require("touch"));
 const path = require('path');
 const rmdir = require('rmdir');
 const ls = require('ls');
+const stringArgv = require('string-argv');
+const readFile = require('fs-readfile-promise');
+const isBinaryFile = promisify(require("isbinaryfile"), { });
+const hexdump = require('hexdump-nodejs');
 
 const newLine = '\r\n';
+const mdExtension = '.md';
 
 function splitPath(relPath) {
     return relPath.split('/');
 }
 
 // Constructor
-function MdContent(contentDirectory, callback) {
+function MdContent(contentDirectory, options) {
     this.contentDirectory = contentDirectory;
+    this.homeTitle = 'Home';
 }
 
 /*
@@ -46,6 +52,7 @@ MdContent.prototype.init = function() {
 
 MdContent.prototype.git = function(args) {
     const _this = this;
+    // console.log(args);
     return new Promise(function(resolve, reject) {
         execFile('git', args, { cwd: _this.contentDirectory }, (error, stdout, stderr) => {
             if (error) {
@@ -141,36 +148,90 @@ MdContent.prototype.getParent = function(relPath) {
     return lin[lin.length-2];
 }
 
-MdContent.prototype.get = function(relPath, version) {
+// Promise
+MdContent.prototype.getRaw = function(relPath, version) {
     if (version) {
         return this.getVersion(relPath, version);
     }
-    console.log("get " + relPath);
     var fsPath = this.getFsPath(relPath);
     const _this = this;
-    return new Promise((resolve, reject) => {
-        fs.readFile(fsPath, "utf-8", (err, data) => { 
-            if (err) {
+    return readFile(fsPath, { encoding: "utf-8" });
+}
+
+MdContent.prototype.getBinary = function(relPath, version) {
+    if (version) {
+        return this.getVersion(relPath, version);
+    }
+    var fsPath = this.getFsPath(relPath);
+    const _this = this;
+    return readFile(fsPath);
+}
+
+// Promise
+MdContent.prototype.get = function(relPath, version) {
+    const _this = this;
+
+    // handle non-md files
+    const extension = path.extname(relPath);
+
+    if (extension.match(/^\.(jpeg|jpg|png|gif|bmp)$/i)) {
+        return Promise.resolve(`![${relPath}](${relPath})`);
+    }
+
+    if (!(extension == mdExtension)) {
+
+        return _this.getBinary(relPath, version)
+            .then((data) => {
+                return isBinaryFile(data, data.length)
+                    .then((binary) => {
+                        if (binary) {
+                            data = hexdump(data.slice(0, 0x1000));
+                        }
+                        return `[Raw](/source${relPath})` + newLine + newLine + '```' + extension.substr(1) + newLine + data + newLine + '```';
+                    })
+            })
+            .catch((err) => {
                 if (err.code == 'EISDIR') {
-                    _this.getDirectoryAsMarkdown(relPath).then(resolve, reject);
-                    return;
-                } else if (err.code == 'ENOENT') {
-                    if (relPath && relPath.endsWith('.sidebar.md')) {
-                        _this.get(_this.getParent(relPath)).then(resolve, reject);
-                        return;
-                    } else {
-                        resolve('# ' + this.getTitleFromRelPath(relPath) + '\r\n\r\nThis page is currently empty.');
-                        return;
-                    }
-                return;
+                    return _this.getDirectoryAsMarkdown(relPath);
+                }
+                throw err;
+            });
+    }
+
+    return _this.getRaw(relPath, version)
+        .catch((err) => {
+            if (err.code == 'EISDIR') {
+                return _this.getDirectoryAsMarkdown(relPath);
+            } else if (err.code == 'ENOENT') {
+                if (relPath && path.basename(relPath) == '.sidebar.md') {
+                    return _this.get(_this.getParent(relPath));
+                } else {
+                    return Promise.resolve('# ' + this.getTitleFromRelPath(relPath) + '\r\n\r\nThis page is currently empty.');
+                }
             }
-            reject(err);
-        }
-        else {
-            resolve(data); 
-        }
-    });
-    });
+            return Promise.reject(err);
+        });
+}
+
+// Promise
+MdContent.prototype.getEditableSource = function(relPath, version) {
+    const _this = this;
+
+    // handle non-md files
+    const extension = path.extname(relPath);
+    if (!(extension == mdExtension)) {
+        return Promise.resolve(undefined);
+    }
+
+    return _this.getRaw(relPath, version)
+        .catch((err) => {
+            if (err.code == 'EISDIR') {
+                return Promise.resolve(undefined);
+            } else if (err.code == 'ENOENT') {
+                return Promise.resolve('# ' + this.getTitleFromRelPath(relPath) + '\r\n\r\nThis page is currently empty.');
+            }
+            return Promise.reject(err);
+        });
 }
 
 /*Promise */ 
@@ -193,32 +254,62 @@ MdContent.prototype.getVersion = function(relPath, versionId) {
     return this.git(['show', versionId + ':.' + relPath]);
 }
 
+function fileExists(fsPath) {
+    return new Promise((resolve, reject) => {
+        fs.exists(fsPath, resolve);
+    });
+}
+
+function writeFile(fsPath, data) {
+    return new Promise((resolve, reject) => {
+        fs.writeFile(fsPath, data, (err) => {
+            if (err) {
+                reject(err);
+            } else { 
+                resolve();
+            }
+        })
+    })
+}
+
 /*Promise */ 
 MdContent.prototype.set = function(relPath, data) {
     const _this = this;
     var fsPath = this.getFsPath(relPath);
-    return new Promise((resolve, reject) => {
-        fs.exists(fsPath, (fileExists) => {
-            if (fileExists) {
-                fs.writeFile(fsPath, data, (err) => {
-                    _this.git(['commit', '--allow-empty-message', '-m', '', '.' + relPath])
-                    .then(resolve, reject);
-            });
-        } else {
-            _this.createEmptyFileInGit(relPath)
-                .then(() => { return _this.set(relPath, data); })
-                .then(resolve, reject);
-        }
+
+    // as a precaution, only modify .md files
+    const extension = path.extname(relPath);
+    if (!(extension == mdExtension)) {
+        return Promise.reject(`Cannot write files of type ${extension}.`);
+    }
+
+    return fileExists(fsPath)
+        .then((exists) => {
+            if (exists) {
+                return writeFile(fsPath, data)
+                    .then(() => {
+                        return _this.git(['commit', '--allow-empty-message', '-m', '', '.' + relPath])
+                        .catch((e) => {
+                            if (e.code == 1) {
+                                // CRLF warning
+                            } else {
+                                throw(e);
+                            }
+                        })
+                    });
+            } else {
+                return _this.createEmptyFileInGit(relPath)
+                    .then(() => _this.set(relPath, data));
+            }
         });
-    });
 }
 
 MdContent.prototype.getTitleFromRelPath = function(fn) {
     if (fn === '/') {
-        return "Home";
+        return this.homeTitle;
     };
     const p = path.parse(fn);
-    if (p.ext === ".md") {
+    if (p.ext === mdExtension) {
         return decodeURIComponent(p.name);
     } else {
         return p.base;
@@ -233,7 +324,7 @@ MdContent.prototype.getBreadcrumbs = function(relPath) {
     let crumbs = relPath === '' ? ['/'] : this.getLineage(relPath);
     return crumbs.map((i) => {
         return this.getMdLink(i);
-    }).join(' - ');
+    }).join(' / ');
 }
 
 MdContent.prototype.getLinkFromRelPath = function (fn) {
@@ -301,9 +392,14 @@ MdContent.prototype.withTrailingSlash = function(relPath) {
     return relPath;
 }
 
+ function getPatterns(pattern) {
+     const p = stringArgv.parseArgsStringToArgv(pattern);
+     return p.reduce((a,b) => { return a.concat(['-e', b])}, []);
+ }
+
 MdContent.prototype.search = function(pattern) {
     const _this = this;
-    return ((pattern.length >= 3) ? (this.git(['grep', '-i', pattern])
+    return ((pattern.length >= 3) ? (this.git(['grep', '--all-match', '-i'].concat(getPatterns(pattern)))
         .then(gitOutput => {
             gitOutput = gitOutput.match(/[^\r\n]+/g)
                 .map((line) => {
