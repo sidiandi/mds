@@ -64,18 +64,13 @@ See the [[Example/]] section for feature demos.
 ## Directory Handling
 
 ### Path ends with /
-* The article area shows the Readme.md file of this directory or the directory content
-* The nav area shows the directory content and the toc of the readme.md file
+* The article area shows the Readme.md file of this directory
+* The nav area shows the directory content and the table of contents of the Readme.md file.
 
 ### Path does not end with /
 * path is interpreted as a file
-* article area shows the file contents or a 'file is empty' message
-* the nav area shows the directory contents of the parent directory and the toc of the file 
+* article area shows the file contents or a 'file is empty' message.
+* the nav area shows the directory contents of the parent directory and the table of contents of the file.
 
 ### Path is `''`
 * Handle like if path is `/`
-
-## Navigation Bar
-
-
-rr
