@@ -58,6 +58,7 @@ See the [[Example/]] section for feature demos.
 * Navbar behaviour
 * support the display of more file types: images
 * support the display of more file types: binary files (hex dump)
+* use bower
 
 ## Directory Handling
 
