@@ -11,7 +11,7 @@ $ npm install mds
 
 ## Features
 - Supported content store backends: git
-- renders PlantUML graphics
+- renders [PlantUML](http://plantuml.com) graphics
 - optimized for keyboard use
 
 See the [[Example/]] section for feature demos.
