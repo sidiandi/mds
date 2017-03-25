@@ -19,6 +19,7 @@ See the [[Example/]] section for feature demos.
 ## Todo
 
 
+* TOC of readme.md is not displayed if directory is shown
 * fix scrolling when clicking on TOC entries.
 * Directory editing (delete files, rename files)
 * directory view: icons for directories and files
