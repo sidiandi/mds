@@ -14,7 +14,7 @@ $ npm install mds
 - renders PlantUML graphics
 - optimized for keyboard use
 
-See [[Example/]] section for feature demos.
+See the [[Example/]] section for feature demos.
 
 ## Todo
 
