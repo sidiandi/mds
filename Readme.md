@@ -18,8 +18,6 @@ See the [[Example/]] section for feature demos.
 
 ## Todo
 
-* TOC of readme.md is not displayed if directory is shown
-* fix scrolling when clicking on TOC entries.
 * Directory editing (delete files, rename files)
 * directory view: icons for directories and files
 * drop images/files/urls onto text editor
@@ -60,6 +58,8 @@ See the [[Example/]] section for feature demos.
 * support the display of more file types: images
 * support the display of more file types: binary files (hex dump)
 * use bower
+* TOC of readme.md is not displayed if directory is shown
+* fix scrolling when clicking on TOC entries.
 
 ## Directory Handling
 
