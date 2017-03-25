@@ -18,6 +18,7 @@ See the [[Example/]] section for feature demos.
 
 ## Todo
 
+
 * fix scrolling when clicking on TOC entries.
 * Directory editing (delete files, rename files)
 * directory view: icons for directories and files
