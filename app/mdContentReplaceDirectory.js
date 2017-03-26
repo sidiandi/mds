@@ -37,6 +37,11 @@ MdContent.prototype.preview = function(path, source) {
     return this.next.preview(path, source);
 }
 
+MdContent.prototype.getBinary = function(path, version) {
+    path = this.transformPath(path);
+    return this.next.getBinary(path, version);
+}
+
 MdContent.prototype.set = function(path, source) {
     path = this.transformPath(path);
     return this.next.set(path, source);

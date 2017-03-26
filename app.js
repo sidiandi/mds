@@ -5,6 +5,7 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 const MdContent = require('./app/mdContentGit');
+const MdContentReplaceDirectory = require('./app/mdContentReplaceDirectory');
 const MdRender = require('./app/mdRender');
 const MdApi = require('./app/mdApi');
 const MdNav = require('./app/mdNav');
@@ -31,7 +32,7 @@ app.init = function(options) {
   app.set('mdsOptions', options);
   app.set('port', options.port);
 
-  const content = new MdContent(options.contentDirectory);
+  const content = new MdContentReplaceDirectory(new MdContent(options.contentDirectory));
   return content.init().then(() => {
     const renderer = new MdRender();
     const api = new MdApi(content, renderer, new MdNav(content, renderer));

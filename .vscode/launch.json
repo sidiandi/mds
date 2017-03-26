@@ -46,7 +46,7 @@
             "name": "Test single",
             "program": "${workspaceRoot}\\node_modules\\jasmine\\bin\\jasmine.js",
             "args": [
-                "--filter=content constructs"
+                "--filter=modifies a directory listing"
             ],
             "cwd": "${workspaceRoot}"
         },

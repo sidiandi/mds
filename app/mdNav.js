@@ -1,3 +1,5 @@
+const MdPath = require('../app/mdPath');
+
 // Constructor
 function MdNav(content, render) {
     this.content = content;
@@ -34,7 +36,7 @@ MdNav.prototype.getTableOfContents = function(path) {
 MdNav.prototype.get = function(path) {
     const _this = this;
     const getToc = _this.getTableOfContents(path);
-    const dir = path.endsWith('/') ? path : _this.content.getParent(path);
+    const dir = (path.endsWith('/') ? path : MdPath.getParent(path)) + '.';
     const getDir = _this.content.get(dir).then(r => r.markdown);
 
     return Promise.all([getDir, getToc]).then((a) => {

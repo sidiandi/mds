@@ -13,13 +13,9 @@ const stringArgv = require('string-argv');
 const readFile = require('fs-readfile-promise');
 const isBinaryFile = promisify(require("isbinaryfile"), { });
 const hexdump = require('hexdump-nodejs');
+const MdPath = require('../app/mdPath');
 
 const newLine = '\r\n';
-const mdExtension = '.md';
-
-function splitPath(relPath) {
-    return relPath.split('/');
-}
 
 // Constructor
 function MdContent(contentDirectory, options) {
@@ -90,22 +86,54 @@ MdContent.prototype.getFsPath = function(relPath) {
 // Promise
 MdContent.prototype.getDirectoryAsMarkdown = function(path) {
     const _this = this;
-    path = this.withTrailingSlash(path);
+    path = MdPath.ensureTrailingSlash(path);
 
     return _this.getDirectory(path)
         .then((children) => {
-            const markdown = children.reduce((s, i) => {
-                const dirPostFix = (i.stat.isDirectory() ? '/' : '');
-                c = path + i.file + dirPostFix;
-                return s + `* [${_this.getTitleFromRelPath(c) + dirPostFix}](${c})${newLine}`;
-            }, '');
-            return { markdown: markdown };
+            return {
+                markdown: children.reduce((s, i) => {
+                    const dirPostFix = (i.stat.isDirectory() ? '/' : '');
+                    c = path + i.file + dirPostFix;
+                    return s + `* [${_this.getTitleFromRelPath(c) + dirPostFix}](${c})${newLine}`;
+                }, ''),
+                source: children.reduce((s, i, pos) => {
+                    const dirPostFix = (i.stat.isDirectory() ? '/' : '');
+                    c = path + i.file + dirPostFix;
+                    return s + `${pos}: ${c}${newLine}`;
+                }, '')
+            };
+    });
+}
+
+MdContent.prototype.parseDirectoryText = function(source) {
+    const re = /^([^:]+)\s*:\s*(.+)$/mg;
+    
+    let files = {};
+    let m;
+    while (m = re.exec(source)) {
+        files[m[1].trim()] = m[2].trim();
+    }
+    return files;
+}
+
+MdContent.prototype.setDirectory = function(path, source) {
+    const newFiles = this.parseDirectoryText(source);
+    return this.getDirectory(path)
+    .then((files) => {
+        for(f of files) {
+            const n = newFiles[f.relPath];
+            if (n) {
+                console.log(`move ${f.relPath} => ${n}`);
+            } else {
+                console.log(`delete ${f.relPath}`);
+            }
+        }
     });
 }
 
 MdContent.prototype.getDirectory = function(path) {
     const _this = this;
-    path = this.withTrailingSlash(path);
+    path = MdPath.ensureTrailingSlash(path);
     const fsPath = this.getFsPath(path);
     const children = ls(fsPath  + '*');
 
@@ -124,13 +152,17 @@ MdContent.prototype.getDirectory = function(path) {
                     return +1;
                 }
             }
+        })
+        .map((f) => {
+            f.relPath = path + f.file;
+            return f;
         }));
 }
 
 // Promise
 MdContent.prototype.getDirectoryAsEditableText = function(path) {
     const _this = this;
-    path = this.withTrailingSlash(path);
+    path = MdPath.ensureTrailingSlash(path);
     const fsPath = this.getFsPath(path);
     const children = ls(fsPath  + '*');
 
@@ -163,17 +195,12 @@ function getToc(markDown) {
 // Promise
 MdContent.prototype.getNav = function(relPath, callback) {
     const _this = this;
-    let parent = this.getParent(relPath);
+    let parent = MdPath.getParent(relPath);
     if (!parent) {
         parent = '/.sidebar.md';
     }
     return Promise.all([_this.get(parent), _this.get(relPath)])
         .then((a) => { return a[0] + "\n----\n" + getToc(a[1]); });
-}
-
-MdContent.prototype.getParent = function(relPath) {
-    var lin = this.getLineage(relPath);
-    return lin[lin.length-2];
 }
 
 // Promise
@@ -211,7 +238,7 @@ MdContent.prototype.get = function(relPath, version) {
         return Promise.resolve({ markdown: `![${relPath}](${relPath})` });
     }
 
-    if (!(extension == mdExtension)) {
+    if (!(extension == MdPath.mdExtension)) {
 
         return _this.getBinary(relPath, version)
             .then((data) => {
@@ -240,11 +267,17 @@ MdContent.prototype.get = function(relPath, version) {
                 return _this.getDirectoryAsMarkdown(relPath);
             } else if (err.code == 'ENOENT') {
                 if (relPath && path.basename(relPath) == '.sidebar.md') {
-                    return _this.get(_this.getParent(relPath));
+                    return _this.get(MdPath.getParent(relPath));
                 } else {
-                    return Promise.resolve('# ' + this.getTitleFromRelPath(relPath) + '\r\n\r\nThis page is currently empty.');
+                    const emptySource = `# ${this.getTitleFromRelPath(relPath)}
+
+*${relPath}* is currently empty.
+
+Click *Edit* or Press *[F2]* to enter some content. 
+`;
+                    return Promise.resolve({ markdown: emptySource, source: emptySource });
+                    }
                 }
-            }
             return Promise.reject(err);
         });
 }
@@ -257,7 +290,7 @@ MdContent.prototype.getEditableSource = function(relPath, version) {
         .then((data) => {
             // handle non-md files
             const extension = path.extname(relPath);
-            if (!(extension == mdExtension)) {
+            if (!(extension == MdPath.mdExtension)) {
                 return `${relPath} cannot be modified.`;
             }
 
@@ -316,9 +349,17 @@ MdContent.prototype.set = function(relPath, data) {
     const _this = this;
     var fsPath = this.getFsPath(relPath);
 
+    if (fs.existsSync(fsPath))
+    {
+        const s = fs.statSync(fsPath);
+        if (s.isDirectory()) {
+            return _this.setDirectory(relPath, data);
+        }
+    }
+
     // as a precaution, only modify .md files
     const extension = path.extname(relPath);
-    if (!(extension == mdExtension)) {
+    if (!(extension == MdPath.mdExtension)) {
         return Promise.reject(`Cannot write files of type ${extension}.`);
     }
 
@@ -348,7 +389,7 @@ MdContent.prototype.getTitleFromRelPath = function(fn) {
         return this.homeTitle;
     };
     const p = path.parse(fn);
-    if (p.ext === mdExtension) {
+    if (p.ext === MdPath.mdExtension) {
         return decodeURIComponent(p.name);
     } else {
         return p.base;
@@ -360,7 +401,7 @@ MdContent.prototype.getMdLink = function(relPath) {
 }
 
 MdContent.prototype.getBreadcrumbs = function(relPath) {
-    let crumbs = relPath === '' ? ['/'] : this.getLineage(relPath);
+    let crumbs = relPath === '' ? ['/'] : MdPath.getLineage(relPath);
     return crumbs.map((i) => {
         return this.getMdLink(i);
     }).join(' / ');
@@ -403,38 +444,10 @@ MdContent.prototype.getHashedHref = function (href, contentPath) {
     return '/#' + p.join('/');
 }
 
-MdContent.prototype.getLineage = function(relPath) {
-    let lineage = [];
-    let i = -1;
-    for (;;)
-    {
-        i = relPath.indexOf('/', i+1);
-        if (i<0)
-        {
-            lineage.push(relPath);
-            break;
-        }
-        lineage.push(relPath.substr(0, i+1));
-        if (i+1 >= relPath.length) {
-            break;
-        }
-    }
-    return lineage;
-}
-
-MdContent.prototype.withTrailingSlash = function(relPath) {
-    if (relPath.endsWith('/')) {
-    }
-    else {
-        relPath = relPath + '/';
-    }
-    return relPath;
-}
-
- function getPatterns(pattern) {
+function getPatterns(pattern) {
      const p = stringArgv.parseArgsStringToArgv(pattern);
      return p.reduce((a,b) => { return a.concat(['-e', b])}, []);
- }
+}
 
 MdContent.prototype.search = function(pattern) {
     const _this = this;

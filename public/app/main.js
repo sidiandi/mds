@@ -98,11 +98,14 @@ $(document).ready(function(){
                         $('navbar').html(data.navbar);
                     }
                     if (data.source) {
-                        if (data.source) {
-                            sourceChanges = 0;
-                            $('#source').val(data.source);
-                            $('#sourceChanges').html(sourceChanges);
-                        }
+                        sourceChanges = 0;
+                        $('#source').val(data.source);
+                        $('#source').prop("disabled", false);
+                        $('#sourceChanges').html(sourceChanges);
+                    }
+                    else if (req.source) {
+                        $('#source').val(`${data.hash} is read-only.`);
+                        $('#source').prop("disabled", true);
                     }
                     if (callback) {
                         callback(data);

@@ -46,7 +46,7 @@ describe("mdContentGit stores Markdown Content in a git repository", function() 
 
     it("gets content", function(done) {
         mdContent.get("/empty.md").then((data) => {
-            expect(data).toContain("This page is currently empty.");
+            expect(data.markdown).toContain("currently empty");
         })
         .then(done);
     });
@@ -63,22 +63,6 @@ describe("mdContentGit stores Markdown Content in a git repository", function() 
         expect(mdContent.getLinkFromRelPath("/a/b/c/d.md")).toBe("/a/b/c/d.md");
     })
 
-    it("gets the lineage of a relative path", function() {
-        expect(mdContent.getLineage("/")).toEqual(['/']);
-        expect(mdContent.getLineage("/Readme.md")).toEqual(['/', '/Readme.md']);
-        expect(mdContent.getLineage("/a/b/c/")).toEqual(['/', '/a/', '/a/b/', '/a/b/c/']);
-    })
-
-    it("gets the parent of a relative path", function() {
-        expect(mdContent.getParent("/a/b/c")).toEqual('/a/b/');
-        expect(mdContent.getParent("/a/b/c/")).toEqual('/a/b/');
-    })
-
-    it("appends a trailing slash if necessary", function() {
-        expect(mdContent.withTrailingSlash('/')).toEqual('/');
-        expect(mdContent.withTrailingSlash('/a/b/c')).toEqual('/a/b/c/');
-    })
-
     it("Generates a breadcrumbs string", function(){
         expect(mdContent.getBreadcrumbs("/a/b/c/d")).toEqual('[Home](/) / [a](/a/) / [b](/a/b/) / [c](/a/b/c/) / [d](/a/b/c/d)');
         expect(mdContent.getBreadcrumbs("")).toEqual('[Home](/)');
@@ -89,8 +73,20 @@ describe("mdContentGit stores Markdown Content in a git repository", function() 
         mdContent.get("/a/b/c/")
             .then(c => {
                 expect(c.markdown).toEqual('* [d](/a/b/c/d.md)\r\n')
-                expect(c.source).toBeFalsy();
+                expect(c.source).toEqual('0: /a/b/c/d.md\r\n')
                 done();
+            })
+            .catch(e => { expect(e).toBeFalsy(); done(); });
+    });
+    
+    it("modifies a directory listing", function(done) {
+        mdContent.set("/a/b/c/", '/a/b/c/e.md : /a/b/c/e.md\r\n')
+            .then(() => {
+            mdContent.get("/a/b/c/")
+                .then(c => {
+                    expect(c.source).toEqual('/a/b/c/e.md\r\n')
+                    done();
+                })
             })
             .catch(e => { expect(e).toBeFalsy(); done(); });
     });
@@ -99,7 +95,7 @@ describe("mdContentGit stores Markdown Content in a git repository", function() 
         mdContent.get("/")
             .then(c => {
                 expect(c.markdown).toEqual('* [a/](/a/)\r\n* [hello](/hello.md)\r\n');
-                expect(c.source).toBeFalsy();
+                expect(c.source).toEqual('0: /a/\r\n1: /hello.md\r\n')
                 done();
             })
             .catch(e => { expect(e).toBeFalsy(); done(); });
@@ -116,6 +112,14 @@ describe("mdContentGit stores Markdown Content in a git repository", function() 
             expect(data.markdown).toEqual(testContent);
         })
         .then(done);
+    });
+
+    it("parses directory text format", function() {
+        var text = `/a/b/c/d.md : /a/b/c/d.md
+/a/b/c/e.md : /a/b/c/e.md`;
+        var files = mdContent.parseDirectoryText(text);
+        expect(files[0]).toEqual("/a/b/c/d.md");
+        console.log(files);
     });
 });
 
