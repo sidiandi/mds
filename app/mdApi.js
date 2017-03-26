@@ -37,12 +37,14 @@ function parseHash(hash) {
         var m = re.exec(hash);
         return { 
             path: m[1],
-            anchor: m[3],
+            anchor: m[3] ? m[3] : null,
         }
     } else {
-        return { path: '/', anchor: undefined }
+        return { path: '/', anchor: null }
     }
 }
+
+MdApi.prototype.parseHash = parseHash;
 
 MdApi.prototype.onReply = function(result) {
 }
@@ -66,6 +68,10 @@ MdApi.prototype.search = function(req) {
 MdApi.prototype.call = function(req) {
     try
     {
+        if (!req) {
+            throw new Error("req is undefined");
+        }
+
         const parsedHash = parseHash(req.hash);
 
         if (parsedHash.command === commandSearch) {
@@ -73,11 +79,7 @@ MdApi.prototype.call = function(req) {
         }
 
         const api = this;
-
         const path = parsedHash.path;
-        const isDirectory = path.endsWith('/');
-        const articlePath = isDirectory ? path + 'Readme.md' : path;
-
         const promises = [];
 
         promises.push(Promise.resolve({
@@ -93,8 +95,8 @@ MdApi.prototype.call = function(req) {
 
         let doCommit;
         if (req.commit) {
-            doCommit = api.content.set(articlePath, req.newSource)
-            .then((r) => { return { commit: true, status: `${articlePath} committed.` }; });
+            doCommit = api.content.set(path, req.newSource)
+            .then((r) => { return { commit: true, status: `${path} committed.` }; });
         } else {
             doCommit = Promise.resolve({ commit : false });
         }
@@ -102,31 +104,30 @@ MdApi.prototype.call = function(req) {
 
         let getSource;
         if ('newSource' in req) {
-            getSource = Promise.resolve(req.newSource);
+            getSource = api.content.preview(path, req.newSource);
         }
         else {
-            getSource = api.content.get(articlePath, req.version);
+            getSource = api.content.get(path, req.version);
         }
-        getSource = getSource.then(function(s) { return { source: s }; });
         if (req.source) {
             promises.push(getSource);
         }
 
         if (req.navbar) {
-            promises.push(api.nav.get(path)
+            promises.push(api.nav.get(path, path)
                 .then((source) => { return { navbar: api.render.render(source, path)} }));
         }
         
         if (req.html) {
             promises.push(getSource
                 .then((r) => {
-                    return api.render.parseAndRender(r.source, articlePath)
+                    return api.render.parseAndRender(r.markdown, path)
                 }));
         }
 
         if (req.history) {
             const getHistory = doCommit
-            .then(() => api.content.getHistory(articlePath))
+            .then(() => api.content.getHistory(path))
             .then((history) => { return { history: history }});
             promises.push(getHistory);
         }
@@ -142,8 +143,7 @@ MdApi.prototype.call = function(req) {
         });
 
     } catch(ex) {
-        console.log(ex);
-        return { status: ex };
+        return Promise.reject({ status: ex });
     }
 }
 

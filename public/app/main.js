@@ -126,7 +126,7 @@ $(document).ready(function(){
         const p = parseHash(hash)
         const id = p.anchor;
         if (id) {
-            const elementToScrollTo = $(id);
+            const elementToScrollTo = $("#" + id);
             const container = $('article');
             container.animate({
                 scrollTop: elementToScrollTo.offset().top - container.offset().top + container.scrollTop()

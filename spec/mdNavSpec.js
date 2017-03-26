@@ -8,9 +8,14 @@ describe("MdNav provide Navbar content", function() {
 
     beforeAll(function(done){
         testApi.createTestApi()
-        .then((a) => { mdNav = new MdNav(a.content, a.render); })
-        .then(done)
-        .catch((e) => { expect(e).toBeFalsy(); done() });
+        .then((api) => {
+            mdNav = new MdNav(api.content, api.render);
+            done();
+        })
+        .catch((e) => {
+            expect(e).toBeFalsy(); 
+            done();
+        });
     });
 
     it("constructs", function(done) {

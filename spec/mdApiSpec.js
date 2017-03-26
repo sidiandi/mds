@@ -39,10 +39,12 @@ describe("mdApi, a json API for MDS, ", function() {
 
     it("returns source, html ", function(done) {
         mdApi.call({
-            hash: '#/hello.md', 
+            hash: '#/hello.md',
+            source: true, 
             html: true, 
             history: true })
         .then((r) => {
+            console.log(r);
             expect(r.source).toEqual('# Hello, world!');
             expect(r.history).toBeDefined();
             done();
@@ -53,7 +55,8 @@ describe("mdApi, a json API for MDS, ", function() {
     it("returns html for posted source", function(done) {
         mdApi.call({
             hash: '#/hello.md',
-            source: '# Mars',
+            newSource: '# Mars',
+            source: true,
             html: true, 
             history: true })
         .then((r) => {
@@ -67,7 +70,8 @@ describe("mdApi, a json API for MDS, ", function() {
     it("commits source", function(done) {
         mdApi.call({
             hash: '#/test-set.md',
-            source: '# Mars',
+            newSource: '# Mars',
+            source: true,
             html: true, 
             history: true,
             commit: true })
@@ -89,24 +93,24 @@ describe("mdApi, a json API for MDS, ", function() {
     it("parses hash correctly", function() {
         var p = mdApi.parseHash('#/Readme.md');
         expect(p.path).toEqual('/Readme.md');
-        expect(p.anchor).toBeUndefined();
+        expect(p.anchor).toBeNull();
     })
 
     it("parses hash correctly", function() {
         var p = mdApi.parseHash('');
         expect(p.path).toEqual('/');
-        expect(p.anchor).toBeUndefined();
+        expect(p.anchor).toBeNull();
     })
 
     it("parses hash correctly", function() {
         var p = mdApi.parseHash(null);
-        expect(p.path).toBeNull();
+        expect(p.path).toEqual('/');
         expect(p.anchor).toBeNull();
     })
 
     it("parses hash correctly", function() {
         var p = mdApi.parseHash(undefined);
-        expect(p.path).toBeNull();
+        expect(p.path).toEqual('/');
         expect(p.anchor).toBeNull();
     })
 });

@@ -21,13 +21,13 @@ MdNav.prototype.getTableOfContents = function(path) {
     const _this = this;
     return this.content.get(path)
         .then((source) => {
-            const tokens = _this.render.lexer(source);
+            const tokens = _this.render.lexer(source.markdown);
             const headings = tokens.filter((i) => { return i.type === 'heading'; });
             toc = headings
                 .map((i) => { return `${getHeadingIndent(i.depth)}* [${i.text}](${path}#${getHeadingId(i.text)})`; })
                 .join('\n');
             return toc;
-        });
+        })
 }
 
 // Promise
@@ -35,11 +35,11 @@ MdNav.prototype.get = function(path) {
     const _this = this;
     const getToc = _this.getTableOfContents(path);
     const dir = path.endsWith('/') ? path : _this.content.getParent(path);
-    const getDir = _this.content.getDirectoryAsMarkdown(dir);
+    const getDir = _this.content.get(dir).then(r => r.markdown);
 
     return Promise.all([getDir, getToc]).then((a) => {
-        return a.filter(i => i).join('\n----\n');
-    });
+        return a.join('\n----\n')
+    })
 }
 
 // export the class

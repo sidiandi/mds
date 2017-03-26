@@ -91,6 +91,21 @@ MdContent.prototype.getFsPath = function(relPath) {
 MdContent.prototype.getDirectoryAsMarkdown = function(path) {
     const _this = this;
     path = this.withTrailingSlash(path);
+
+    return _this.getDirectory(path)
+        .then((children) => {
+            const markdown = children.reduce((s, i) => {
+                const dirPostFix = (i.stat.isDirectory() ? '/' : '');
+                c = path + i.file + dirPostFix;
+                return s + `* [${_this.getTitleFromRelPath(c) + dirPostFix}](${c})${newLine}`;
+            }, '');
+            return { markdown: markdown };
+    });
+}
+
+MdContent.prototype.getDirectory = function(path) {
+    const _this = this;
+    path = this.withTrailingSlash(path);
     const fsPath = this.getFsPath(path);
     const children = ls(fsPath  + '*');
 
@@ -109,12 +124,25 @@ MdContent.prototype.getDirectoryAsMarkdown = function(path) {
                     return +1;
                 }
             }
-        })
-        .reduce((s, i) => {
+        }));
+}
+
+// Promise
+MdContent.prototype.getDirectoryAsEditableText = function(path) {
+    const _this = this;
+    path = this.withTrailingSlash(path);
+    const fsPath = this.getFsPath(path);
+    const children = ls(fsPath  + '*');
+
+    return _this.getDirectory(path)
+        .then((children) => 
+        {
+            return children.reduce((s, i, pos) => {
                 const dirPostFix = (i.stat.isDirectory() ? '/' : '');
                 c = path + i.file + dirPostFix;
-                return s + `* [${_this.getTitleFromRelPath(c) + dirPostFix}](${c})${newLine}`;
-        }, ''));
+                return s + `${pos}: ${c}${newLine}`;
+        }, '');
+    });
 }
 
 function matchAll(re, text) {
@@ -168,6 +196,11 @@ MdContent.prototype.getBinary = function(relPath, version) {
 }
 
 // Promise
+MdContent.prototype.preview = function(relPath, source) {
+    return Promise.resolve({ markdown: source, source: source });
+}
+
+// Promise
 MdContent.prototype.get = function(relPath, version) {
     const _this = this;
 
@@ -175,7 +208,7 @@ MdContent.prototype.get = function(relPath, version) {
     const extension = path.extname(relPath);
 
     if (extension.match(/^\.(jpeg|jpg|png|gif|bmp)$/i)) {
-        return Promise.resolve(`![${relPath}](${relPath})`);
+        return Promise.resolve({ markdown: `![${relPath}](${relPath})` });
     }
 
     if (!(extension == mdExtension)) {
@@ -187,7 +220,7 @@ MdContent.prototype.get = function(relPath, version) {
                         if (binary) {
                             data = hexdump(data.slice(0, 0x1000));
                         }
-                        return `[Raw](/source${relPath})` + newLine + newLine + '```' + extension.substr(1) + newLine + data + newLine + '```';
+                        return { markdown: `[Raw](/source${relPath})` + newLine + newLine + '```' + extension.substr(1) + newLine + data + newLine + '```' };
                     })
             })
             .catch((err) => {
@@ -199,6 +232,9 @@ MdContent.prototype.get = function(relPath, version) {
     }
 
     return _this.getRaw(relPath, version)
+        .then((source) => {
+            return { markdown: source, source: source };
+        })
         .catch((err) => {
             if (err.code == 'EISDIR') {
                 return _this.getDirectoryAsMarkdown(relPath);
@@ -217,21 +253,24 @@ MdContent.prototype.get = function(relPath, version) {
 MdContent.prototype.getEditableSource = function(relPath, version) {
     const _this = this;
 
-    // handle non-md files
-    const extension = path.extname(relPath);
-    if (!(extension == mdExtension)) {
-        return Promise.resolve(undefined);
-    }
-
     return _this.getRaw(relPath, version)
+        .then((data) => {
+            // handle non-md files
+            const extension = path.extname(relPath);
+            if (!(extension == mdExtension)) {
+                return `${relPath} cannot be modified.`;
+            }
+
+            return data;
+        })
         .catch((err) => {
             if (err.code == 'EISDIR') {
-                return Promise.resolve(undefined);
+                return _this.getDirectoryAsEditableText(relPath);
             } else if (err.code == 'ENOENT') {
                 return Promise.resolve('# ' + this.getTitleFromRelPath(relPath) + '\r\n\r\nThis page is currently empty.');
             }
             return Promise.reject(err);
-        });
+        })
 }
 
 /*Promise */ 

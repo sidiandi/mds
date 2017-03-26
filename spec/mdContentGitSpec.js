@@ -80,7 +80,7 @@ describe("mdContentGit stores Markdown Content in a git repository", function() 
     })
 
     it("Generates a breadcrumbs string", function(){
-        expect(mdContent.getBreadcrumbs("/a/b/c/d")).toEqual('[Home](/) - [a](/a/) - [b](/a/b/) - [c](/a/b/c/) - [d](/a/b/c/d)');
+        expect(mdContent.getBreadcrumbs("/a/b/c/d")).toEqual('[Home](/) / [a](/a/) / [b](/a/b/) / [c](/a/b/c/) / [d](/a/b/c/d)');
         expect(mdContent.getBreadcrumbs("")).toEqual('[Home](/)');
         expect(mdContent.getBreadcrumbs("/")).toEqual('[Home](/)');
     })
@@ -88,8 +88,9 @@ describe("mdContentGit stores Markdown Content in a git repository", function() 
     it("returns a directory listing", function(done) {
         mdContent.get("/a/b/c/")
             .then(c => {
-                expect(c).toEqual('* [d](/a/b/c/d.md)\r\n')
-                done()
+                expect(c.markdown).toEqual('* [d](/a/b/c/d.md)\r\n')
+                expect(c.source).toBeFalsy();
+                done();
             })
             .catch(e => { expect(e).toBeFalsy(); done(); });
     });
@@ -97,7 +98,8 @@ describe("mdContentGit stores Markdown Content in a git repository", function() 
     it("returns a directory listing", function(done) {
         mdContent.get("/")
             .then(c => {
-                expect(c).toEqual('* [a](/a/)\r\n* [hello](/hello.md)\r\n');
+                expect(c.markdown).toEqual('* [a/](/a/)\r\n* [hello](/hello.md)\r\n');
+                expect(c.source).toBeFalsy();
                 done();
             })
             .catch(e => { expect(e).toBeFalsy(); done(); });
@@ -110,7 +112,8 @@ describe("mdContentGit stores Markdown Content in a git repository", function() 
         .then(() => { console.log("set complete"); })
         .then(() => { return mdContent.get(relPath); } )
         .then(function(data) {
-                expect(data).toEqual(testContent);
+            expect(data.source).toEqual(testContent);
+            expect(data.markdown).toEqual(testContent);
         })
         .then(done);
     });
