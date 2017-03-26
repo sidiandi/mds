@@ -1,3 +1,3 @@
 # Long Text
 
-This page is currently empty.
+Long text can be structured with 
